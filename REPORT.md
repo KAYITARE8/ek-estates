@@ -18,7 +18,7 @@
 
 ## 1. Introduction
 
-Kigali Estates is a full-stack real estate e-commerce web application developed to facilitate the browsing, listing, and management of properties across Rwanda. The platform serves as a digital marketplace where customers can explore properties for sale or rent, submit inquiries, add properties to a shopping cart, and complete a full checkout process. An integrated admin panel allows the business owner to manage all aspects of the platform including properties, agents, orders, users, and inquiries.
+ek estates is a full-stack property e-commerce web application developed to facilitate the browsing, listing, and management of properties across Rwanda. The platform serves as a digital marketplace where customers can explore properties for sale or rent, submit inquiries, add properties to a shopping cart, and complete a full checkout process. An integrated admin panel allows the business owner to manage all aspects of the platform including properties, agents, orders, users, and inquiries.
 
 The application was built using modern web technologies including Node.js, Express.js, and NeDB, and was deployed on Render with a fully automated CI/CD pipeline via GitHub Actions and Docker containerization.
 
@@ -87,11 +87,11 @@ The main objectives of this project are:
 |---|---|---|
 | Frontend | HTML5, CSS3, Vanilla JavaScript | UI structure, styling, and interactivity |
 | Backend | Node.js, Express.js | REST API server |
-| Database | NeDB (`@seald-io/nedb`) | Persistent flat-file database |
-| Authentication | bcryptjs | Password hashing (10 salt rounds) |
+| Database | Supabase PostgreSQL | Hosted relational database |
+| Authentication | bcryptjs, signed JWT sessions | Password hashing and protected admin API |
 | Containerization | Docker, Docker Compose | Application packaging and portability |
 | CI/CD | GitHub Actions | Automated build, test, and deployment |
-| Deployment | Render | Cloud hosting with persistent disk |
+| Deployment | Render | Cloud application hosting |
 | Version Control | Git, GitHub | Source code management |
 
 ---
@@ -111,20 +111,20 @@ Express.js Server (server.js)
       │
       ├── REST API (/api/*)
       │
-      └── NeDB Database (data/*.db files)
-            ├── properties.db
-            ├── agents.db
-            ├── inquiries.db
-            ├── orders.db
-            ├── users.db
-            ├── settings.db
-            └── admin.db
+      └── Supabase PostgreSQL
+            ├── properties
+            ├── agents
+            ├── inquiries
+            ├── orders
+            ├── users
+            ├── settings
+            └── admins
 ```
 
 **Request Flow:**
 1. The browser loads static HTML/CSS/JS files served by Express
 2. JavaScript on the client makes fetch() calls to the REST API endpoints
-3. Express routes handle each request, query NeDB, and return JSON responses
+3. Express routes handle each request, query Supabase, and return JSON responses
 4. The client renders the response data dynamically into the DOM
 
 **Deployment Architecture:**
@@ -144,63 +144,63 @@ GitHub Actions (CI/CD)
             └── curl → Render Deploy Hook
                         │
                         ▼
-                  Render Web Service
-                  (Node.js + Persistent Disk)
+                  Render Web Service ─── Supabase Project
+                  (Node.js API)          (PostgreSQL)
 ```
 
 ---
 
 ## 7. Database Design
 
-The application uses NeDB, a lightweight embedded database that stores each collection as a flat file under the `data/` directory. NeDB uses a MongoDB-like API and supports async operations.
+The application uses Supabase PostgreSQL for persistent data. Run `supabase/schema.sql` in the Supabase SQL Editor to create the tables. The server connects with a private server-side key; row-level security is enabled, and admin API operations require a signed session token.
 
-### Collections
+### Tables
 
-**properties.db**
+**properties**
 ```
 {
-  _id, title, type, status, price, currency,
+  id, title, type, status, price, currency,
   location, district, bedrooms, bathrooms,
   area, description, features[], image,
   featured, createdAt
 }
 ```
 
-**agents.db**
+**agents**
 ```
-{ _id, name, role, phone, email, photo }
+{ id, name, role, phone, email, photo }
 ```
 
-**inquiries.db**
+**inquiries**
 ```
 {
-  _id, name, email, phone, message,
+  id, name, email, phone, message,
   propertyTitle, is_read, is_done, date
 }
 ```
 
-**orders.db**
+**orders**
 ```
 {
-  _id,
+  id,
   customer: { firstName, lastName, email, phone, address, district },
   items[], total, paymentMethod, notes, status, createdAt
 }
 ```
 
-**users.db**
+**users**
 ```
-{ _id, name, email, password (hashed), createdAt }
-```
-
-**settings.db**
-```
-{ _id, companyName, tagline, phone, email, address, whatsapp, about }
+{ id, name, email, password (bcrypt hashed), created_at }
 ```
 
-**admin.db**
+**settings**
 ```
-{ _id, username, password (hashed), name, photo }
+{ id, company_name, tagline, phone, email, address, whatsapp, about }
+```
+
+**admins**
+```
+{ id, username, password (bcrypt hashed), name, photo }
 ```
 
 ### Entity Relationships
@@ -276,8 +276,8 @@ The repository contains:
 The application is deployed on **Render** as a Web Service with:
 - Build command: `npm install`
 - Start command: `node server.js`
-- Environment variable: `PORT=3000`
-- Persistent disk mounted at `/app/data` (1GB) to preserve NeDB database files across deployments
+- Private environment variables for Supabase connection, JWT signing, and initial admin credentials
+- Supabase PostgreSQL stores data independently of application deployments
 
 ---
 
@@ -293,7 +293,7 @@ The pipeline runs automatically on every push to the `main` branch.
 **Stage 1 — Build & Test**
 ```yaml
 - Checkout code
-- Set up Node.js 20
+- Set up Node.js 22
 - Install dependencies (npm install)
 - Run tests (npm test)
 - Build Docker image (docker build)
@@ -317,7 +317,7 @@ The pipeline runs automatically on every push to the `main` branch.
 The application is fully containerized using Docker.
 
 ### Dockerfile
-The `Dockerfile` defines a Node.js 20 Alpine-based image that:
+The `Dockerfile` defines a Node.js 22 Alpine-based image that:
 1. Sets the working directory to `/app`
 2. Copies `package.json` and installs dependencies
 3. Copies all source files
@@ -328,7 +328,7 @@ The `Dockerfile` defines a Node.js 20 Alpine-based image that:
 The `docker-compose.yml` file defines:
 - The web service built from the local Dockerfile
 - Port mapping `3000:3000`
-- A named volume `ke_data` mounted at `/app/data` for persistent database storage
+- A local `.env` file for private Supabase and session configuration
 
 ### Running with Docker
 ```bash
@@ -340,7 +340,7 @@ http://localhost:3000
 ```
 
 ### render.yaml
-A `render.yaml` file configures a persistent disk on Render with mount path `/app/data` to ensure NeDB database files survive redeployments.
+The Render configuration declares the required Supabase connection, session-signing, and admin bootstrap environment variables.
 
 ---
 
@@ -348,7 +348,7 @@ A `render.yaml` file configures a persistent disk on Render with mount path `/ap
 
 | Challenge | Solution |
 |---|---|
-| NeDB data lost on every Render redeploy | Added a persistent disk via `render.yaml` mounted at `/app/data` |
+| NeDB data lost on every Render redeploy | Replaced file-based storage with Supabase PostgreSQL |
 | Property images couldn't be stored as URLs reliably | Replaced URL input with file upload; images are resized and stored as base64 using Canvas API |
 | Profile photo exceeding request body limit | Increased Express body limit to 5mb and added client-side image resizing before upload |
 | Inquiries not showing due to inconsistent field names | Normalized `propertyTitle` and `property_title` fields across all API responses |
@@ -373,7 +373,7 @@ A `render.yaml` file configures a persistent disk on Render with mount path `/ap
 
 ## 15. Conclusion
 
-Kigali Estates successfully demonstrates a complete, production-ready e-commerce web application built for the Rwandan real estate market. The project covers all required functional areas including product management, shopping cart, checkout, database integration, user authentication, and a comprehensive admin panel.
+ek estates successfully demonstrates a complete, production-ready e-commerce web application built for the Rwandan property market. The project covers all required functional areas including product management, shopping cart, checkout, database integration, user authentication, and a comprehensive admin panel.
 
 From a DevOps perspective, the application is fully containerized with Docker, version-controlled on GitHub with a meaningful commit history, and automatically built, tested, and deployed through a GitHub Actions CI/CD pipeline to Render.
 

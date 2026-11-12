@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Panel - Kigali Estates</title>
+  <title>Admin Panel - ek estates</title>
   <link rel="stylesheet" href="css/admin.css">
 </head>
 <body>
   <div class="admin-layout">
-    <aside class="sidebar">
+    <aside class="sidebar" id="adminSidebar">
       <div class="sidebar-header">
-        <h2>Kigali Estates</h2>
+        <h2>ek estates</h2>
         <span>Admin Panel</span>
       </div>
       <nav class="sidebar-nav">
@@ -29,9 +29,11 @@
         © 2026
       </div>
     </aside>
+    <button type="button" class="sidebar-overlay" aria-label="Close navigation" onclick="closeSidebar()"></button>
 
     <main class="main-content">
       <div class="top-bar">
+        <button type="button" class="menu-toggle" aria-label="Open navigation" aria-controls="adminSidebar" aria-expanded="false" onclick="toggleSidebar()">☰</button>
         <h1 id="pageTitle">Dashboard</h1>
         <div class="user-info">
           <div class="user-dropdown">

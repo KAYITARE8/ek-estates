@@ -1,4 +1,4 @@
-/* Kigali Estates - Admin Panel Styles */
+/* ek estates - Admin Panel Styles */
 
 :root {
   --primary: #1a5f4a;
@@ -22,6 +22,10 @@
   box-sizing: border-box;
 }
 
+img {
+  max-width: 100%;
+}
+
 body {
   font-family: var(--font);
   color: var(--dark);
@@ -34,6 +38,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 16px;
   background: linear-gradient(135deg, var(--primary-dark), var(--primary));
 }
 
@@ -43,26 +48,21 @@ body {
   border-radius: 12px;
   box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
 }
 
 .login-card .logo {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
 }
 
-.login-card .logo-icon {
-  width: 56px;
-  height: 56px;
-  background: var(--primary);
-  border-radius: 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--white);
-  font-weight: 700;
-  font-size: 22px;
-  margin-bottom: 12px;
+/* Logo: sized by width, height follows automatically, so nothing is cropped */
+.login-card .login-logo {
+  width: 240px;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto 14px;
 }
 
 .login-card h1 {
@@ -208,6 +208,8 @@ body {
   bottom: 0;
   overflow-y: auto;
   z-index: 50;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar-header {
@@ -220,7 +222,22 @@ body {
   font-size: 18px;
 }
 
+/* Sidebar logo (use ek-logo-dark.svg) - replaces the old .brand-logo-frame crop */
+.sidebar-logo-link {
+  display: block;
+  line-height: 0;
+}
+
+.sidebar-logo {
+  width: 100%;
+  max-width: 170px;
+  height: auto;
+  display: block;
+}
+
 .sidebar-header span {
+  display: block;
+  margin-top: 10px;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -262,10 +279,7 @@ body {
 .sidebar-footer {
   padding: 20px;
   border-top: 1px solid #334155;
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  margin-top: auto;
 }
 
 .sidebar-footer a {
@@ -300,6 +314,11 @@ body {
 
 .top-bar h1 {
   font-size: 22px;
+}
+
+.menu-toggle,
+.sidebar-overlay {
+  display: none;
 }
 
 .top-bar .user-info {
@@ -698,14 +717,51 @@ body {
   .sidebar {
     transform: translateX(-100%);
     transition: transform 0.3s;
+    width: min(var(--sidebar-width), 85vw);
   }
 
   .sidebar.open {
     transform: translateX(0);
   }
 
+  .sidebar-overlay.active {
+    display: block;
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: rgba(15, 23, 42, 0.45);
+    z-index: 45;
+  }
+
+  .menu-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--light-gray);
+    color: var(--dark);
+    font-size: 20px;
+    cursor: pointer;
+  }
+
   .main-content {
     margin-left: 0;
+  }
+
+  .top-bar {
+    gap: 12px;
+    padding: 12px 16px;
+  }
+
+  .top-bar h1 {
+    flex: 1;
+    font-size: 18px;
   }
 
   .dashboard-cards {
@@ -718,6 +774,34 @@ body {
 
   .content-area {
     padding: 16px;
+  }
+
+  .login-card .login-logo {
+    width: 210px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-card {
+    padding: 28px 20px;
+  }
+
+  .login-card .login-logo {
+    width: 190px;
+  }
+}
+
+@media (max-width: 380px) {
+  .top-bar {
+    padding: 10px 12px;
+  }
+
+  .content-area {
+    padding: 12px;
+  }
+
+  .login-card .login-logo {
+    width: 170px;
   }
 }
 
@@ -824,7 +908,6 @@ body {
 
 .photo-upload-btn:hover { background: #e2e8f0; }
 
-.profile-form-card { }
 
 @media (max-width: 900px) {
   .analytics-grid { grid-template-columns: 1fr; }

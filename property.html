@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Property Details - Kigali Estates</title>
+  <title>Property Details - ek estates</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -30,7 +30,7 @@
       const property = await getProperty(params.id);
       if (!property) return;
 
-      document.title = property.title + ' - Kigali Estates';
+      document.title = property.title + ' - ek estates';
       const meta = [];
       if (property.bedrooms > 0) meta.push({ value: property.bedrooms, label: 'Bedrooms' });
       if (property.bathrooms > 0) meta.push({ value: property.bathrooms, label: 'Bathrooms' });

@@ -8,7 +8,8 @@ function getSession() {
 }
 
 function isLoggedIn() {
-  return !!getSession();
+  const session = getSession();
+  return !!(session && session.token);
 }
 
 function logout() {
@@ -17,8 +18,20 @@ function logout() {
 
 // ── Async API helpers ─────────────────────────────────────────
 async function apiFetch(url, options = {}) {
-  const res = await fetch(API + url, { headers: { 'Content-Type': 'application/json' }, ...options });
-  if (!res.ok) throw new Error(await res.text());
+  const headers = { 'Content-Type': 'application/json', ...options.headers };
+  const session = getSession();
+  if (session && session.token) headers.Authorization = `Bearer ${session.token}`;
+  const res = await fetch(API + url, { ...options, headers });
+  if (!res.ok) {
+    const message = await res.text();
+    if (res.status === 401 && session && session.token) {
+      logout();
+      if (window.location.pathname.endsWith('/admin.html')) {
+        window.location.href = 'admin-login.html';
+      }
+    }
+    throw new Error(message);
+  }
   return res.json();
 }
 
@@ -46,6 +59,10 @@ async function deleteProperty(id) {
 // ── Agents ────────────────────────────────────────────────────
 async function getAgents() {
   return apiFetch('/api/agents');
+}
+
+async function getStats() {
+  return apiFetch('/api/stats');
 }
 
 async function addAgent(data) {
@@ -105,9 +122,10 @@ async function userLogin(email, password) {
   try {
     const data = await apiFetch('/api/login', { method: 'POST', body: JSON.stringify({ email, password }) });
     if (data.role === 'admin') {
-      sessionStorage.setItem('ke_session', JSON.stringify({ username: data.username, name: data.name, loginTime: Date.now() }));
+      sessionStorage.setItem('ke_session', JSON.stringify({ username: data.username, name: data.name, token: data.token, loginTime: Date.now() }));
       return { ok: true, role: 'admin' };
     }
+    sessionStorage.removeItem('ke_session');
     sessionStorage.setItem('ke_user', JSON.stringify({ id: data.id, name: data.name, email: data.email }));
     return { ok: true, role: 'user' };
   } catch (e) {
@@ -129,7 +147,7 @@ async function login(email, password) {
   try {
     const data = await apiFetch('/api/login', { method: 'POST', body: JSON.stringify({ email, password }) });
     if (data.role === 'admin') {
-      sessionStorage.setItem('ke_session', JSON.stringify({ username: data.username, name: data.name, loginTime: Date.now() }));
+      sessionStorage.setItem('ke_session', JSON.stringify({ username: data.username, name: data.name, token: data.token, loginTime: Date.now() }));
       return true;
     }
     return false;

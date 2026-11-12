@@ -18,7 +18,28 @@ document.addEventListener('click', function (e) {
   if (menu && !e.target.closest('.user-dropdown')) menu.classList.remove('active');
 });
 
+function toggleSidebar() {
+  const sidebar = document.getElementById('adminSidebar');
+  const toggle = document.querySelector('.menu-toggle');
+  const overlay = document.querySelector('.sidebar-overlay');
+  const isOpen = sidebar.classList.toggle('open');
+  toggle.setAttribute('aria-expanded', String(isOpen));
+  toggle.setAttribute('aria-label', isOpen ? 'Close navigation' : 'Open navigation');
+  overlay.classList.toggle('active', isOpen);
+}
+
+function closeSidebar() {
+  const sidebar = document.getElementById('adminSidebar');
+  const toggle = document.querySelector('.menu-toggle');
+  const overlay = document.querySelector('.sidebar-overlay');
+  sidebar.classList.remove('open');
+  toggle.setAttribute('aria-expanded', 'false');
+  toggle.setAttribute('aria-label', 'Open navigation');
+  overlay.classList.remove('active');
+}
+
 function showSection(sectionId) {
+  if (window.matchMedia('(max-width: 768px)').matches) closeSidebar();
   document.querySelectorAll('.panel-section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
   const section = document.getElementById(sectionId);

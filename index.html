@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kigali Estates - Real Estate in Rwanda</title>
+  <title>ek estates</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -13,7 +13,7 @@
     <div class="container">
       <div class="hero-content">
         <h2 id="heroTitle">Find Your Dream Property in Rwanda</h2>
-        <p id="heroTagline">Discover premium homes, apartments, land, and commercial spaces across Kigali and beyond.</p>
+        <p id="heroTagline" hidden></p>
         <form class="search-box" onsubmit="handleHeroSearch(event)">
           <div>
             <label>Status</label>
@@ -139,66 +139,23 @@
   <script src="js/cart.js"></script>
   <script src="js/main.js"></script>
 
-  <!-- Auth Modal -->
-  <div class="modal-overlay" id="loginModal" onclick="if(event.target===this)this.classList.remove('active')">
-    <div class="login-modal-card">
-      <div class="login-modal-logo">
-        <div class="login-modal-icon">KE</div>
-      </div>
-      <div class="lm-tabs">
-        <button class="lm-tab active" onclick="switchTab('signin')">Sign In</button>
-        <button class="lm-tab" onclick="switchTab('signup')">Sign Up</button>
-      </div>
-      <div id="loginModalAlert"></div>
-
-      <!-- Sign In -->
-      <form id="signinForm" onsubmit="handleModalLogin(event)">
-        <div class="lm-group">
-          <label>Email</label>
-          <input type="email" id="lmEmail" required autocomplete="email">
-        </div>
-        <div class="lm-group">
-          <label>Password</label>
-          <input type="password" id="lmPassword" required autocomplete="current-password">
-        </div>
-        <button type="submit" class="lm-btn">Sign In</button>
-      </form>
-
-      <!-- Sign Up -->
-      <form id="signupForm" style="display:none" onsubmit="handleModalRegister(event)">
-        <div class="lm-group">
-          <label>Full Name</label>
-          <input type="text" id="suName" required>
-        </div>
-        <div class="lm-group">
-          <label>Email</label>
-          <input type="email" id="suEmail" required autocomplete="email">
-        </div>
-        <div class="lm-group">
-          <label>Password</label>
-          <input type="password" id="suPassword" required minlength="6">
-        </div>
-        <button type="submit" class="lm-btn">Create Account</button>
-      </form>
-
-      <button class="lm-close" onclick="document.getElementById('loginModal').classList.remove('active')">&times;</button>
-    </div>
-  </div>
   <script>
     (async () => {
       const settings = await initPage('index.html');
       document.getElementById('heroTitle').textContent = 'Find Your Dream Property in Rwanda';
-      document.getElementById('heroTagline').textContent = settings.tagline;
+      const heroTagline = document.getElementById('heroTagline');
+      heroTagline.textContent = settings.tagline;
+      heroTagline.hidden = !settings.tagline.trim();
 
-      const [properties, agents, users, orders] = await Promise.all([getProperties(), getAgents(), getUsers(), getOrders()]);
+      const [properties, agents, stats] = await Promise.all([getProperties(), getAgents(), getStats()]);
       const featured = properties.filter(p => p.featured);
       renderPropertiesGrid(featured, 'featuredProperties');
 
       document.getElementById('statsSection').innerHTML = `
         <div class="stat-item"><div class="stat-number">${properties.length}</div><div class="stat-label">Active Listings</div></div>
         <div class="stat-item"><div class="stat-number">${agents.length}</div><div class="stat-label">Expert Agents</div></div>
-        <div class="stat-item"><div class="stat-number">${users.length}</div><div class="stat-label">Registered Users</div></div>
-        <div class="stat-item"><div class="stat-number">${orders.length}</div><div class="stat-label">Orders Placed</div></div>
+        <div class="stat-item"><div class="stat-number">${stats.users}</div><div class="stat-label">Registered Users</div></div>
+        <div class="stat-item"><div class="stat-number">${stats.orders}</div><div class="stat-label">Orders Placed</div></div>
       `;
       document.getElementById('agentsSection').innerHTML = agents.map(renderAgentCard).join('');
     })();
@@ -217,60 +174,6 @@
       window.location.href = 'properties.html?' + params.toString();
     }
 
-    async function handleModalLogin(e) {
-      e.preventDefault();
-      const alertEl = document.getElementById('loginModalAlert');
-      alertEl.innerHTML = '';
-      const res = await userLogin(
-        document.getElementById('lmEmail').value,
-        document.getElementById('lmPassword').value
-      );
-      if (res.ok) {
-        document.getElementById('loginModal').classList.remove('active');
-        if (res.role === 'admin') {
-          window.location.href = 'admin.html';
-        } else {
-          location.reload();
-        }
-      } else {
-        alertEl.innerHTML = `<div class="lm-error">Invalid email or password.</div>`;
-      }
-    }
-
-    async function handleModalRegister(e) {
-      e.preventDefault();
-      const alertEl = document.getElementById('loginModalAlert');
-      alertEl.innerHTML = '';
-      const res = await registerUser(
-        document.getElementById('suName').value,
-        document.getElementById('suEmail').value,
-        document.getElementById('suPassword').value
-      );
-      if (res.ok) {
-        // auto sign-in after registration
-        const loginRes = await userLogin(
-          document.getElementById('suEmail').value,
-          document.getElementById('suPassword').value
-        );
-        document.getElementById('loginModal').classList.remove('active');
-        if (loginRes.ok && loginRes.role === 'admin') {
-          window.location.href = 'admin.html';
-        } else {
-          location.reload();
-        }
-      } else {
-        let msg = 'Registration failed. Please try again.';
-        if (res.error && (res.error.includes('409') || res.error.includes('already'))) msg = 'Email already registered. Please sign in.';
-        alertEl.innerHTML = `<div class="lm-error">${msg}</div>`;
-      }
-    }
-
-    function switchTab(tab) {
-      document.getElementById('signinForm').style.display = tab === 'signin' ? '' : 'none';
-      document.getElementById('signupForm').style.display = tab === 'signup' ? '' : 'none';
-      document.getElementById('loginModalAlert').innerHTML = '';
-      document.querySelectorAll('.lm-tab').forEach((t, i) => t.classList.toggle('active', (i === 0) === (tab === 'signin')));
-    }
   </script>
 </body>
 </html>

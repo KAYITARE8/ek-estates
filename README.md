@@ -1,4 +1,4 @@
-# Kigali Estates 🏠
+# ek estates 🏠
 
 A full-stack real estate e-commerce web application for browsing, listing, and managing properties across Rwanda.
 
@@ -52,7 +52,7 @@ A full-stack real estate e-commerce web application for browsing, listing, and m
 - Inquiry workflow: mark as read → mark as done → moves to Done page → permanently delete
 - Analytics dashboard with real-time stats and bar charts
 - Admin profile management with photo upload
-- NeDB database (persistent, pure JS — no native compilation required)
+- Supabase PostgreSQL database
 - Fully containerized with Docker
 - CI/CD pipeline via GitHub Actions
 - Deployed on Render
@@ -65,8 +65,8 @@ A full-stack real estate e-commerce web application for browsing, listing, and m
 |---|---|
 | Frontend | HTML5, CSS3, Vanilla JavaScript |
 | Backend | Node.js, Express.js |
-| Database | NeDB (`@seald-io/nedb`) |
-| Authentication | bcryptjs (password hashing) |
+| Database | Supabase PostgreSQL (`@supabase/supabase-js`) |
+| Authentication | bcryptjs (password hashing), jsonwebtoken (admin API sessions) |
 | Containerization | Docker, Docker Compose |
 | CI/CD | GitHub Actions |
 | Deployment | Render |
@@ -76,7 +76,7 @@ A full-stack real estate e-commerce web application for browsing, listing, and m
 ## Project Structure
 
 ```
-kigali-estates/
+ek-estates/
 ├── css/
 │   ├── style.css          # Public site styles
 │   └── admin.css          # Admin panel styles
@@ -88,7 +88,8 @@ kigali-estates/
 ├── .github/
 │   └── workflows/
 │       └── deploy.yml     # CI/CD pipeline
-├── data/                  # NeDB database files (gitignored)
+├── supabase/
+│   └── schema.sql         # Database tables and row-level security
 ├── index.html             # Homepage
 ├── properties.html        # Property listing
 ├── property.html          # Property detail
@@ -100,11 +101,11 @@ kigali-estates/
 ├── admin.html             # Admin dashboard
 ├── admin-login.html       # Admin login
 ├── server.js              # Express API server
-├── db.js                  # NeDB database setup & seeding
+├── db.js                  # Supabase client and initial demo data
 ├── package.json
 ├── Dockerfile
 ├── docker-compose.yml
-├── render.yaml            # Render persistent disk config
+├── render.yaml            # Render environment variable configuration
 └── .gitignore
 ```
 
@@ -112,15 +113,17 @@ kigali-estates/
 
 ## Database Design
 
-NeDB stores data in flat files under `data/`. Collections:
+The app stores data in Supabase PostgreSQL. Create the tables by running [`supabase/schema.sql`](./supabase/schema.sql) in the Supabase SQL Editor. The server connects using the Supabase URL and server-side secret key; never put the secret key in frontend code or commit it. The first server startup adds the sample listings, agents, and site settings without overwriting existing records. Set `ADMIN_USERNAME` and `ADMIN_PASSWORD` to create the initial admin account.
 
-- **properties.db** — id, title, type, status, price, currency, location, district, bedrooms, bathrooms, area, description, features, image, featured, createdAt
-- **agents.db** — id, name, role, phone, email, photo
-- **inquiries.db** — id, name, email, phone, message, propertyTitle, is_read, is_done, date
-- **orders.db** — id, customer{firstName,lastName,email,phone,address,district}, items, total, paymentMethod, notes, status, createdAt
-- **users.db** — id, name, email, password(hashed), createdAt
-- **settings.db** — companyName, tagline, phone, email, address, whatsapp, about
-- **admin.db** — id, username, password(hashed), name, photo
+| Table | Contents |
+|---|---|
+| `properties` | Listings, features, location, pricing, and status |
+| `agents` | Agent contact and profile information |
+| `inquiries` | Customer inquiries and read/done state |
+| `orders` | Checkout customer, items, payment, and order status |
+| `users` | Registered accounts with bcrypt-hashed passwords |
+| `settings` | Company profile and site settings |
+| `admins` | Admin username, bcrypt-hashed password, and profile |
 
 ---
 
@@ -210,7 +213,7 @@ Open [http://localhost:3000](http://localhost:3000)
 The GitHub Actions workflow (`.github/workflows/deploy.yml`) runs on every push to `main`:
 
 1. Checkout code
-2. Install Node.js 20 dependencies
+2. Install Node.js 22 dependencies
 3. Run tests (`npm test`)
 4. Build Docker image
 5. Trigger deployment to Render via deploy hook
@@ -224,9 +227,15 @@ The GitHub Actions workflow (`.github/workflows/deploy.yml`) runs on every push 
 3. Connect your GitHub repository
 4. Set build command: `npm install`
 5. Set start command: `node server.js`
-6. Add environment variable: `PORT=3000`
-7. Add a **Disk** with mount path `/app/data` (1GB) for persistent data
-8. Copy the **Deploy Hook URL** and add it as a GitHub secret named `RENDER_DEPLOY_HOOK_URL`
+6. Add `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SESSION_SECRET`, `ADMIN_USERNAME`, and `ADMIN_PASSWORD` in Render. Keep these private server-side settings out of browser code.
+7. Copy the **Deploy Hook URL** and add it as a GitHub secret named `RENDER_DEPLOY_HOOK_URL`.
+
+### Supabase setup
+
+1. Create a Supabase project.
+2. In **SQL Editor**, run `supabase/schema.sql`.
+3. Copy `.env.example` to `.env`, then add the project URL, server-side secret key, and a strong admin username and password. Generate a random `SESSION_SECRET` (for example, `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`).
+4. Add the same variables to your hosting provider's environment settings, then deploy. Existing NeDB files are not imported automatically.
 
 ---
 
@@ -234,12 +243,12 @@ The GitHub Actions workflow (`.github/workflows/deploy.yml`) runs on every push 
 
 ```bash
 # Build
-docker build -t kigali-estates .
+docker build -t ek-estates .
 
 # Run
-docker run -p 3000:3000 kigali-estates
+docker run --env-file .env -p 3000:3000 ek-estates
 
-# Or with docker-compose (recommended — includes persistent volume)
+# Or with docker-compose after creating a local .env file from .env.example
 docker-compose up --build
 ```
 
@@ -250,7 +259,7 @@ docker-compose up --build
 - Passwords hashed with **bcryptjs** (salt rounds: 10)
 - Unified login endpoint checks admin first, then users
 - Input validation on all forms (frontend + backend)
-- Sessions stored in `sessionStorage` (cleared on tab close)
+- Admin API routes require a signed, expiring token; the token is kept in `sessionStorage`
 
 ---
 

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Kigali Estates – Tools & Technologies</title>
+  <title>ek estates – Tools & Technologies</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -136,7 +136,7 @@
   <!-- Cover -->
   <div class="cover">
     <div class="logo">KE</div>
-    <h1>Kigali Estates</h1>
+    <h1>ek estates</h1>
     <h2>Tools & Technologies Used — Full Explanation</h2>
     <div class="meta">
       <strong>Course:</strong> EWA408510 – E-Commerce and Web Application<br>
@@ -158,7 +158,7 @@
     <div class="tool-desc">
       HTML5 is the standard markup language used to build the structure of every page in the application.
       It defines what appears on screen using elements such as headings, paragraphs, forms, tables, buttons,
-      and links. In Kigali Estates, HTML5 is used across all pages including <em>index.html</em> (homepage),
+      and links. In ek estates, HTML5 is used across all pages including <em>index.html</em> (homepage),
       <em>properties.html</em> (listings), <em>cart.html</em> (shopping cart), <em>checkout.html</em>,
       <em>confirmation.html</em>, and <em>admin.html</em> (admin dashboard). Each page is a standalone
       HTML file served directly by the Express.js backend.
@@ -226,7 +226,7 @@
     </div>
     <div class="tool-desc">
       Express.js is a minimal and flexible web application framework for Node.js. It simplifies the
-      process of creating a web server and defining API routes. In Kigali Estates, Express.js is used
+      process of creating a web server and defining API routes. In ek estates, Express.js is used
       to define all 25+ REST API endpoints such as <code>GET /api/properties</code>,
       <code>POST /api/orders</code>, <code>POST /api/login</code>, and <code>DELETE /api/users/:id</code>.
       It also serves all static HTML, CSS, and JavaScript files to the browser using
@@ -241,25 +241,19 @@
   <div class="tool-card">
     <div class="tool-header">
       <span class="tool-badge orange">Database</span>
-      <span class="tool-name">NeDB (@seald-io/nedb)</span>
+      <span class="tool-name">Supabase PostgreSQL</span>
     </div>
     <div class="tool-desc">
-      NeDB is a lightweight, embedded, pure JavaScript database that stores data in flat <em>.db</em>
-      files on the server's filesystem. It uses a MongoDB-like API with async methods such as
-      <code>findAsync()</code>, <code>insertAsync()</code>, <code>updateAsync()</code>, and
-      <code>removeAsync()</code>. Each collection is a separate file stored in the <em>data/</em> folder:
+      Supabase provides the hosted PostgreSQL database used by the Express API. The server accesses it
+      with <code>@supabase/supabase-js</code> and keeps credentials in server-side environment variables.
+      The schema is defined in <em>supabase/schema.sql</em> and contains:
       <br><br>
-      • <strong>properties.db</strong> — All property listings<br>
-      • <strong>agents.db</strong> — Real estate agents<br>
-      • <strong>inquiries.db</strong> — Customer inquiries and order notifications<br>
-      • <strong>orders.db</strong> — Customer orders from checkout<br>
-      • <strong>users.db</strong> — Registered customer accounts<br>
-      • <strong>settings.db</strong> — Company information and site settings<br>
-      • <strong>admin.db</strong> — Admin account with hashed password and profile photo<br>
-      <br>
-      NeDB was chosen over SQLite (<em>better-sqlite3</em>) because SQLite requires native C++ compilation
-      which failed on Node.js v24. NeDB is 100% pure JavaScript and works on any Node version without
-      any build tools.
+      • <strong>properties</strong> and <strong>agents</strong> — Listings and agent profiles<br>
+      • <strong>inquiries</strong> and <strong>orders</strong> — Customer requests and purchases<br>
+      • <strong>users</strong> and <strong>admins</strong> — Accounts with bcrypt-hashed passwords<br>
+      • <strong>settings</strong> — Company information and site settings<br><br>
+      Row-level security is enabled on all tables. The backend uses a private server-side key; that key
+      must never be embedded in browser JavaScript or committed to source control.
     </div>
   </div>
 
@@ -289,12 +283,10 @@
       <span class="tool-name">sessionStorage (Browser API)</span>
     </div>
     <div class="tool-desc">
-      sessionStorage is a built-in browser Web Storage API used to maintain the logged-in user's
-      session on the client side. After a successful login, the user's name, email, and role are
-      stored in sessionStorage as a JSON string. This data is read on every page to show the user's
-      name in the header and to protect admin routes. Unlike localStorage, sessionStorage is
-      automatically cleared when the browser tab is closed, which prevents unauthorized access
-      from shared computers.
+      sessionStorage is a built-in browser Web Storage API used to keep the admin's signed access
+      token between page loads in the current tab. The Express API verifies the token before
+      allowing admin-only operations; it expires after 12 hours. Unlike localStorage,
+      sessionStorage is cleared when the tab is closed.
     </div>
   </div>
 
@@ -309,12 +301,11 @@
     <div class="tool-desc">
       Docker is a containerization platform that packages an application and all its dependencies
       into a single portable unit called a container. The <em>Dockerfile</em> in this project uses
-      <code>node:20-alpine</code> as the base image (a lightweight Linux distribution), copies the
+      <code>node:22-alpine</code> as the base image (a lightweight Linux distribution), copies the
       application code, installs production dependencies with <code>npm install --production</code>,
       and starts the server with <code>node server.js</code>. The <em>docker-compose.yml</em> file
-      defines the service configuration including port mapping (3000:3000) and a named volume
-      (<em>db_data</em>) that mounts to <em>/app/data</em> inside the container, ensuring the NeDB
-      database files persist even when the container is restarted or rebuilt.
+      defines the service configuration and reads private connection settings from a local
+      <em>.env</em> file. The database persists independently of the app container in Supabase.
     </div>
   </div>
 
@@ -333,7 +324,7 @@
       automatically on every push to the <em>main</em> branch. It runs the following steps:
       <br><br>
       1. <strong>Checkout code</strong> — downloads the latest code<br>
-      2. <strong>Set up Node.js 20</strong> — installs the correct runtime<br>
+      2. <strong>Set up Node.js 22</strong> — installs the correct runtime<br>
       3. <strong>Install dependencies</strong> — runs <code>npm install</code><br>
       4. <strong>Run tests</strong> — runs <code>npm test</code><br>
       5. <strong>Build Docker image</strong> — builds and verifies the container<br>
@@ -348,11 +339,11 @@
       <span class="tool-name">Render</span>
     </div>
     <div class="tool-desc">
-      Render is a cloud hosting platform used to deploy and serve the Kigali Estates application
+      Render is a cloud hosting platform used to deploy and serve the ek estates application
       publicly on the internet. The Node.js web service runs on Render's infrastructure with the
-      start command <code>node server.js</code>. A persistent disk (1GB) is mounted at
-      <em>/app/data</em> via <em>render.yaml</em> configuration, ensuring the NeDB database files
-      are not wiped on each deployment. The application is accessible at
+      start command <code>node server.js</code>. Supabase connection settings and initial admin
+      credentials and the token-signing secret are configured as private environment variables in Render.
+      The application is accessible at
       <strong>https://kigali-estates.onrender.com</strong>. Deployments are triggered automatically
       by the GitHub Actions CI/CD pipeline via a secure deploy hook URL.
     </div>
@@ -375,7 +366,7 @@
       <tr><td>Vanilla JavaScript</td><td>Frontend</td><td>Interactivity, API calls, cart logic</td></tr>
       <tr><td>Node.js</td><td>Backend</td><td>Server-side JavaScript runtime</td></tr>
       <tr><td>Express.js</td><td>Backend</td><td>REST API routing and static file serving</td></tr>
-      <tr><td>NeDB</td><td>Database</td><td>Persistent flat-file data storage</td></tr>
+      <tr><td>Supabase PostgreSQL</td><td>Database</td><td>Hosted relational data storage</td></tr>
       <tr><td>bcryptjs</td><td>Security</td><td>Password hashing and verification</td></tr>
       <tr><td>sessionStorage</td><td>Security</td><td>Client-side session management</td></tr>
       <tr><td>Docker</td><td>DevOps</td><td>Application containerization</td></tr>
@@ -387,7 +378,7 @@
 
   <!-- Footer -->
   <div class="footer">
-    Kigali Estates — EWA408510 Final Project<br>
+    ek estates — EWA408510 Final Project<br>
     UNILAK, Faculty of Computing and Information Sciences — 2025–2026<br>
     🔗 https://kigali-estates.onrender.com &nbsp;|&nbsp; 🔗 https://github.com/KAYITARE8/-kigali-estates
   </div>

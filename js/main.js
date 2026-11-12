@@ -9,16 +9,12 @@ function renderHeader(activePage, settings) {
   const user = typeof getUser === 'function' ? getUser() : null;
   const authBtn = user
     ? `<div class="user-pill">&#128100; ${user.name} <button onclick="userLogout();location.reload()" class="user-logout-btn">Sign Out</button></div>`
-    : `<button class="btn-login-header" onclick="document.getElementById('loginModal').classList.add('active')">&#128274; Login</button>`;
+    : `<button class="btn-login-header" onclick="openLoginModal()">&#128274; Login</button>`;
   return `
     <header class="header">
       <div class="container header-inner">
         <a href="index.html" class="logo">
-          <div class="logo-icon">KE</div>
-          <div class="logo-text">
-            <h1>${settings.companyName}</h1>
-            <span>Real Estate Rwanda</span>
-          </div>
+          <img class="login-logo" src="Option%204%20-%20Wordmark%402x.png" alt="ek real estate logo">
         </a>
         <button class="nav-toggle" onclick="toggleNav()" aria-label="Menu">&#9776;</button>
         <nav class="nav" id="mainNav">${navLinks}</nav>
@@ -29,6 +25,113 @@ function renderHeader(activePage, settings) {
         ${authBtn}
       </div>
     </header>`;
+}
+
+function renderLoginModal() {
+  return `
+    <div class="modal-overlay" id="loginModal" onclick="if(event.target===this)closeLoginModal()">
+      <div class="login-modal-card">
+        <div class="login-modal-logo">
+          <img class="login-logo login-modal-wordmark" src="Option%204%20-%20Wordmark%402x.png" alt="ek real estate logo">
+        </div>
+        <div class="lm-tabs">
+          <button class="lm-tab active" onclick="switchLoginModalTab('signin')">Sign In</button>
+          <button class="lm-tab" onclick="switchLoginModalTab('signup')">Sign Up</button>
+        </div>
+        <div id="loginModalAlert"></div>
+        <form id="signinForm" onsubmit="handleModalLogin(event)">
+          <div class="lm-group">
+            <label>Email</label>
+            <input type="email" id="lmEmail" required autocomplete="email">
+          </div>
+          <div class="lm-group">
+            <label>Password</label>
+            <input type="password" id="lmPassword" required autocomplete="current-password">
+          </div>
+          <button type="submit" class="lm-btn">Sign In</button>
+        </form>
+        <form id="signupForm" style="display:none" onsubmit="handleModalRegister(event)">
+          <div class="lm-group">
+            <label>Full Name</label>
+            <input type="text" id="suName" required>
+          </div>
+          <div class="lm-group">
+            <label>Email</label>
+            <input type="email" id="suEmail" required autocomplete="email">
+          </div>
+          <div class="lm-group">
+            <label>Password</label>
+            <input type="password" id="suPassword" required minlength="6">
+          </div>
+          <button type="submit" class="lm-btn">Create Account</button>
+        </form>
+        <button class="lm-close" onclick="closeLoginModal()">&times;</button>
+      </div>
+    </div>`;
+}
+
+function openLoginModal() {
+  const modal = document.getElementById('loginModal');
+  if (modal) modal.classList.add('active');
+}
+
+function closeLoginModal() {
+  const modal = document.getElementById('loginModal');
+  if (modal) modal.classList.remove('active');
+}
+
+async function handleModalLogin(e) {
+  e.preventDefault();
+  const alertEl = document.getElementById('loginModalAlert');
+  alertEl.innerHTML = '';
+  const res = await userLogin(
+    document.getElementById('lmEmail').value,
+    document.getElementById('lmPassword').value
+  );
+  if (res.ok) {
+    closeLoginModal();
+    if (res.role === 'admin') {
+      window.location.href = 'admin.html';
+    } else {
+      location.reload();
+    }
+  } else {
+    alertEl.innerHTML = `<div class="lm-error">Invalid email or password.</div>`;
+  }
+}
+
+async function handleModalRegister(e) {
+  e.preventDefault();
+  const alertEl = document.getElementById('loginModalAlert');
+  alertEl.innerHTML = '';
+  const res = await registerUser(
+    document.getElementById('suName').value,
+    document.getElementById('suEmail').value,
+    document.getElementById('suPassword').value
+  );
+  if (res.ok) {
+    const loginRes = await userLogin(
+      document.getElementById('suEmail').value,
+      document.getElementById('suPassword').value
+    );
+    closeLoginModal();
+    if (loginRes.ok && loginRes.role === 'admin') {
+      window.location.href = 'admin.html';
+    } else {
+      location.reload();
+    }
+  } else {
+    let msg = 'Registration failed. Please try again.';
+    if (res.error && (res.error.includes('409') || res.error.includes('already'))) msg = 'Email already registered. Please sign in.';
+    alertEl.innerHTML = `<div class="lm-error">${msg}</div>`;
+  }
+}
+
+function switchLoginModalTab(tab) {
+  document.getElementById('signinForm').style.display = tab === 'signin' ? '' : 'none';
+  document.getElementById('signupForm').style.display = tab === 'signup' ? '' : 'none';
+  document.getElementById('loginModalAlert').innerHTML = '';
+  document.querySelectorAll('.lm-tab').forEach((t, i) => t.classList.toggle('active', (i === 0) === (tab === 'signin')));
 }
 
 function renderFooter(settings) {
@@ -195,6 +298,9 @@ async function initPage(activePage) {
   const footerEl = document.getElementById('site-footer');
   if (headerEl) headerEl.innerHTML = renderHeader(activePage, settings);
   if (footerEl) footerEl.innerHTML = renderFooter(settings);
+  if (!document.getElementById('loginModal')) {
+    document.body.insertAdjacentHTML('beforeend', renderLoginModal());
+  }
   if (typeof updateCartBadge === 'function') updateCartBadge();
   return settings;
 }
