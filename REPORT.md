@@ -1,4 +1,4 @@
-# EWA408510 – E-Commerce and Web Application
+﻿# EWA408510 â€“ E-Commerce and Web Application
 ## Final Project Report
 
 ---
@@ -8,11 +8,11 @@
 **Faculty:** Computing and Information Sciences
 **Programme:** Bachelor of Science in Information Systems and Management
 **Option:** Information Systems and Management
-**Course Code & Name:** EWA408510 – E-Commerce and Web Application
+**Course Code & Name:** EWA408510 â€“ E-Commerce and Web Application
 **Instructor:** Eric Maniraguha
 **Student Name:** Emmanuel Kayitare
 **Student ID:** 25264/2024
-**Academic Year:** 2025–2026
+**Academic Year:** 2025â€“2026
 
 ---
 
@@ -61,7 +61,7 @@ The main objectives of this project are:
 | Checkout | Customer info form, order summary, payment method selection |
 | Order Confirmation | Confirmation page with order ID after successful checkout |
 | User Registration | Sign up with name, email, and password |
-| User Login | Unified login modal — admin redirects to dashboard, users stay on site |
+| User Login | Unified login modal â€” admin redirects to dashboard, users stay on site |
 | Contact Page | General inquiry form that submits to the admin panel |
 | About Page | Company info, mission, and agent profiles |
 
@@ -98,27 +98,27 @@ The main objectives of this project are:
 
 ## 6. System Architecture
 
-The application follows a classic **Client–Server** architecture:
+The application follows a classic **Clientâ€“Server** architecture:
 
 ```
 Browser (Client)
-      │
-      │  HTTP Requests (fetch API)
-      ▼
+      â”‚
+      â”‚  HTTP Requests (fetch API)
+      â–¼
 Express.js Server (server.js)
-      │
-      ├── Static Files (HTML, CSS, JS)
-      │
-      ├── REST API (/api/*)
-      │
-      └── Supabase PostgreSQL
-            ├── properties
-            ├── agents
-            ├── inquiries
-            ├── orders
-            ├── users
-            ├── settings
-            └── admins
+      â”‚
+      â”œâ”€â”€ Static Files (HTML, CSS, JS)
+      â”‚
+      â”œâ”€â”€ REST API (/api/*)
+      â”‚
+      â””â”€â”€ Supabase PostgreSQL
+            â”œâ”€â”€ properties
+            â”œâ”€â”€ agents
+            â”œâ”€â”€ inquiries
+            â”œâ”€â”€ orders
+            â”œâ”€â”€ users
+            â”œâ”€â”€ settings
+            â””â”€â”€ admins
 ```
 
 **Request Flow:**
@@ -130,21 +130,21 @@ Express.js Server (server.js)
 **Deployment Architecture:**
 ```
 GitHub (main branch)
-      │
-      │  push
-      ▼
+      â”‚
+      â”‚  push
+      â–¼
 GitHub Actions (CI/CD)
-      │
-      ├── Build & Test
-      │     ├── npm install
-      │     ├── npm test
-      │     └── docker build
-      │
-      └── Deploy
-            └── curl → Render Deploy Hook
-                        │
-                        ▼
-                  Render Web Service ─── Supabase Project
+      â”‚
+      â”œâ”€â”€ Build & Test
+      â”‚     â”œâ”€â”€ npm install
+      â”‚     â”œâ”€â”€ npm test
+      â”‚     â””â”€â”€ docker build
+      â”‚
+      â””â”€â”€ Deploy
+            â””â”€â”€ curl â†’ Render Deploy Hook
+                        â”‚
+                        â–¼
+                  Render Web Service â”€â”€â”€ Supabase Project
                   (Node.js API)          (PostgreSQL)
 ```
 
@@ -215,34 +215,26 @@ The application uses Supabase PostgreSQL for persistent data. Run `supabase/sche
 ## 8. Screenshots of the Application
 
 ### Homepage
-![Homepage](screeshshots/indexpage.png)
 
 ### Properties Listing
-![Properties](screeshshots/properties.png)
 
 ### About Page
-![About](screeshshots/about.png)
 
 ### Contact Page
-![Contact](screeshshots/contact.png)
 
 ### Admin Dashboard
-![Admin Dashboard](screeshshots/admin%20dash.png)
 
 ### Inquiries Management
-![Inquiries](screeshshots/inquiries.png)
 
 ### Users Management
-![Users](screeshshots/users.png)
 
 ### Analytics Dashboard
-![Analytics](screeshshots/analytics.png)
 
 ---
 
 ## 9. GitHub Repository
 
-🔗 **Repository URL:** https://github.com/KAYITARE8/-kigali-estates
+ðŸ”— **Repository URL:** https://github.com/KAYITARE8/-kigali-estates
 
 The repository contains:
 - Full source code with meaningful commit history (25+ commits)
@@ -271,7 +263,7 @@ The repository contains:
 
 ## 10. Deployment Link
 
-🔗 **Live Application:** https://kigali-estates.onrender.com
+ðŸ”— **Live Application:** https://kigali-estates.onrender.com
 
 The application is deployed on **Render** as a Web Service with:
 - Build command: `npm install`
@@ -290,7 +282,7 @@ The pipeline runs automatically on every push to the `main` branch.
 
 ### Pipeline Stages
 
-**Stage 1 — Build & Test**
+**Stage 1 â€” Build & Test**
 ```yaml
 - Checkout code
 - Set up Node.js 22
@@ -299,7 +291,7 @@ The pipeline runs automatically on every push to the `main` branch.
 - Build Docker image (docker build)
 ```
 
-**Stage 2 — Deploy to Render**
+**Stage 2 â€” Deploy to Render**
 ```yaml
 - Trigger Render deploy hook via curl POST request
 - Uses RENDER_DEPLOY_HOOK_URL stored as a GitHub secret
@@ -308,7 +300,7 @@ The pipeline runs automatically on every push to the `main` branch.
 ### Evidence
 - 25 successful workflow runs recorded on GitHub Actions
 - Both Build & Test and Deploy to Render jobs pass on every push
-- Pipeline duration averages 24–38 seconds per run
+- Pipeline duration averages 24â€“38 seconds per run
 
 ---
 
@@ -360,14 +352,14 @@ The Render configuration declares the required Supabase connection, session-sign
 
 ## 14. Future Enhancements
 
-- **Payment Gateway Integration** — Integrate MTN Mobile Money or Airtel Money for real transactions
-- **Real-Time Notifications** — Use WebSockets to notify admin of new inquiries instantly
-- **Progressive Web App (PWA)** — Add service worker and manifest for offline access and installability
-- **Advanced Search** — Full-text search across property titles, descriptions, and locations
-- **Property Map View** — Integrate Google Maps or Leaflet.js to show property locations on a map
-- **Multi-Language Support** — Add Kinyarwanda and French language options
-- **Email Notifications** — Send automated email confirmations to customers after inquiry or order submission
-- **AI Property Recommendations** — Suggest similar properties based on browsing history
+- **Payment Gateway Integration** â€” Integrate MTN Mobile Money or Airtel Money for real transactions
+- **Real-Time Notifications** â€” Use WebSockets to notify admin of new inquiries instantly
+- **Progressive Web App (PWA)** â€” Add service worker and manifest for offline access and installability
+- **Advanced Search** â€” Full-text search across property titles, descriptions, and locations
+- **Property Map View** â€” Integrate Google Maps or Leaflet.js to show property locations on a map
+- **Multi-Language Support** â€” Add Kinyarwanda and French language options
+- **Email Notifications** â€” Send automated email confirmations to customers after inquiry or order submission
+- **AI Property Recommendations** â€” Suggest similar properties based on browsing history
 
 ---
 
@@ -386,5 +378,5 @@ This project reflects the practical application of e-commerce concepts, modern w
 **Student:** Emmanuel Kayitare
 **Student ID:** 25264/2024
 **Programme:** BSc Information Systems and Management
-**Campus:** Nyanza Campus — UNILAK
-**Academic Year:** 2025–2026
+**Campus:** Nyanza Campus â€” UNILAK
+**Academic Year:** 2025â€“2026

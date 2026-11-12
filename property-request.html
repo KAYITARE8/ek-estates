@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>List Your Property | EK Estates</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <main>
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <h1>Request to List Your Property</h1>
+          <p>Share your property with us. Our team will review your request before it appears on EK Estates.</p>
+        </div>
+
+        <div id="property-request-message" class="alert" role="status" hidden></div>
+        <div id="property-request-auth" class="property-request-auth" hidden>
+          <h2>Sign in to continue</h2>
+          <p>You need a registered account to submit a property for review.</p>
+          <button type="button" class="btn btn-primary" onclick="openLoginModal()">Sign in or Register</button>
+        </div>
+
+        <form id="property-request-form" class="property-request-form" onsubmit="submitPropertyRequestForm(event)" hidden>
+          <div class="request-form-grid">
+            <div class="form-group">
+              <label for="request-title">Property title *</label>
+              <input id="request-title" name="title" type="text" maxlength="120" required>
+            </div>
+            <div class="form-group">
+              <label for="request-type">Property type *</label>
+              <select id="request-type" name="type" required>
+                <option value="house">House</option>
+                <option value="apartment">Apartment</option>
+                <option value="land">Land</option>
+                <option value="commercial">Commercial</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="request-status">Listing type *</label>
+              <select id="request-status" name="status" required>
+                <option value="sale">For Sale</option>
+                <option value="rent">For Rent</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="request-price">Price (RWF) *</label>
+              <input id="request-price" name="price" type="number" min="1" step="1" required>
+            </div>
+            <div class="form-group">
+              <label for="request-area">Area *</label>
+              <input id="request-area" name="area" type="number" min="1" step="any" required>
+            </div>
+            <div class="form-group">
+              <label for="request-bedrooms">Bedrooms</label>
+              <input id="request-bedrooms" name="bedrooms" type="number" min="0" max="100" step="1" value="0">
+            </div>
+            <div class="form-group">
+              <label for="request-bathrooms">Bathrooms</label>
+              <input id="request-bathrooms" name="bathrooms" type="number" min="0" max="100" step="1" value="0">
+            </div>
+            <div class="form-group">
+              <label for="request-district">District *</label>
+              <select id="request-district" name="district" required></select>
+            </div>
+            <div class="form-group">
+              <label for="request-location">Location *</label>
+              <input id="request-location" name="location" type="text" maxlength="160" placeholder="e.g. Kacyiru, Kigali" required>
+            </div>
+            <div class="form-group request-form-full">
+              <label for="request-phone">Phone number *</label>
+              <input id="request-phone" name="phone" type="tel" maxlength="40" autocomplete="tel" placeholder="+250..." required>
+            </div>
+            <div class="form-group request-form-full">
+              <label for="request-description">Description *</label>
+              <textarea id="request-description" name="description" rows="5" maxlength="4000" required></textarea>
+            </div>
+            <div class="form-group request-form-full">
+              <label for="request-feature-input">Features</label>
+              <div class="request-feature-entry">
+                <input id="request-feature-input" type="text" maxlength="80" placeholder="e.g. Parking, garden, security">
+                <button type="button" class="btn btn-outline" onclick="addRequestFeature()">Add feature</button>
+              </div>
+              <div id="request-features" class="request-features" aria-live="polite"></div>
+            </div>
+            <div class="form-group request-form-full">
+              <label for="request-image-file">Property photo *</label>
+              <input id="request-image-file" type="file" accept="image/*" required onchange="previewRequestImage(event)">
+              <small>Choose a clear photo of the property. The image is resized before upload.</small>
+              <div class="request-image-preview">
+                <img id="request-image-preview" alt="Property photo preview" hidden>
+                <span id="request-image-placeholder">Your photo preview will appear here.</span>
+              </div>
+            </div>
+          </div>
+          <div class="request-form-actions">
+            <button type="button" class="btn btn-outline btn-lg" onclick="cancelPropertyRequestForm()">Cancel</button>
+            <button id="request-submit-button" type="submit" class="btn btn-primary btn-lg">Send Request</button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <div id="site-footer"></div>
+
+  <script src="js/storage.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/property-request.js"></script>
+</body>
+</html>

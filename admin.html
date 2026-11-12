@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Panel - ek estates</title>
-  <link rel="stylesheet" href="css/admin.css">
+  <link rel="stylesheet" href="css/admin.css?v=2">
 </head>
 <body>
   <div class="admin-layout">
@@ -14,19 +14,19 @@
         <span>Admin Panel</span>
       </div>
       <nav class="sidebar-nav">
-        <a href="#" data-section="dashboard" class="active" onclick="showSection('dashboard'); return false;">&#128202; Dashboard</a>
-        <a href="#" data-section="properties" onclick="showSection('properties'); return false;">&#127968; Properties</a>
-        <a href="#" data-section="agents" onclick="showSection('agents'); return false;">&#128119; Agents</a>
-        <a href="#" data-section="inquiries" onclick="showSection('inquiries'); return false;">&#128140; Inquiries <span class="badge" id="inquiryBadge" style="display:none">0</span></a>
-        <a href="#" data-section="users" onclick="showSection('users'); return false;">&#128101; Users</a>
-        <a href="#" data-section="done" onclick="showSection('done'); return false;">&#10003; Done</a>
-        <a href="#" data-section="analytics" onclick="showSection('analytics'); return false;">&#128200; Analytics</a>
-        <a href="#" data-section="settings" onclick="showSection('settings'); return false;">&#9881; Settings</a>
-        <a href="#" data-section="profile" onclick="showSection('profile'); return false;">&#128100; Profile</a>
+        <a href="#" data-section="dashboard" class="active" onclick="showSection('dashboard'); return false;">Dashboard</a>
+        <a href="#" data-section="properties" onclick="showSection('properties'); return false;">Properties</a>
+        <a href="#" data-section="agents" onclick="showSection('agents'); return false;">Agents</a>
+        <a href="#" data-section="inquiries" onclick="showSection('inquiries'); return false;">Inquiries <span class="badge" id="inquiryBadge" style="display:none">0</span></a>
+        <a href="#" data-section="users" onclick="showSection('users'); return false;">Users</a>
+        <a href="#" data-section="done" onclick="showSection('done'); return false;">Review Queue</a>
+        <a href="#" data-section="analytics" onclick="showSection('analytics'); return false;">Analytics</a>
+        <a href="#" data-section="settings" onclick="showSection('settings'); return false;">Settings</a>
+        <a href="#" data-section="profile" onclick="showSection('profile'); return false;">Profile</a>
       </nav>
       <div class="sidebar-footer">
-        crafted by Kaii.<br>
-        © 2026
+        crafted with passion 🌱.<br>
+        © ek
       </div>
     </aside>
     <button type="button" class="sidebar-overlay" aria-label="Close navigation" onclick="closeSidebar()"></button>
@@ -177,6 +177,24 @@
               <tbody id="inquiriesTable"></tbody>
             </table>
           </div>
+          <div class="data-table-wrapper completed-inquiries">
+            <div class="table-header">
+              <h2>Completed Inquiries</h2>
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Contact</th>
+                  <th>Property</th>
+                  <th>Message</th>
+                  <th>Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="completedInquiriesTable"></tbody>
+            </table>
+          </div>
         </section>
 
         <!-- Users -->
@@ -193,24 +211,25 @@
           </div>
         </section>
 
-        <!-- Done Inquiries -->
+        <!-- Review Queue -->
         <section id="done" class="panel-section">
           <div class="data-table-wrapper">
             <div class="table-header">
-              <h2>Done Inquiries</h2>
+              <h2>Review Queue</h2>
             </div>
+            <h3 class="review-queue-subheading">Property Requests</h3>
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Contact</th>
                   <th>Property</th>
-                  <th>Message</th>
-                  <th>Date</th>
+                  <th>Price</th>
+                  <th>Location</th>
+                  <th>Submitted By</th>
+                  <th>Requested</th>
                   <th>Actions</th>
                 </tr>
               </thead>
-              <tbody id="doneTable"></tbody>
+              <tbody id="propertyRequestsTable"></tbody>
             </table>
           </div>
         </section>
@@ -222,7 +241,7 @@
             <div class="analytics-card"><h3>Properties by Type</h3><div id="chartByType" class="bar-chart"></div></div>
             <div class="analytics-card"><h3>Properties by Status</h3><div id="chartByStatus" class="bar-chart"></div></div>
             <div class="analytics-card"><h3>Inquiries by Month</h3><div id="chartInquiries" class="bar-chart"></div></div>
-            <div class="analytics-card"><h3>Orders by Status</h3><div id="chartOrders" class="bar-chart"></div></div>
+            <div class="analytics-card"><h3>Requests by Month</h3><div id="chartRequests" class="bar-chart"></div></div>
           </div>
         </section>
 
@@ -321,6 +340,29 @@
         </section>
       </div>
     </main>
+  </div>
+
+  <div class="modal-overlay" id="cancelPropertyRequestModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Cancel Property Request</h2>
+        <button type="button" class="modal-close" onclick="closeCancelPropertyRequestModal()">&times;</button>
+      </div>
+      <form onsubmit="submitCancelPropertyRequest(event)">
+        <div class="modal-body">
+          <p>Enter a reason for cancelling this request. The user will see this message in Notifications.</p>
+          <div class="form-group">
+            <label for="cancelPropertyRequestReason">Reason *</label>
+            <textarea id="cancelPropertyRequestReason" rows="4" maxlength="1000" required></textarea>
+          </div>
+          <div id="cancelPropertyRequestError" class="field-error" role="alert"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeCancelPropertyRequestModal()">Back</button>
+          <button id="confirmCancelPropertyRequest" type="submit" class="btn btn-danger">Cancel Request</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <!-- Property Modal -->
@@ -449,6 +491,21 @@
               <input type="email" id="agentEmail" required>
             </div>
           </div>
+          <div class="form-group">
+            <label>Agent Photo (optional)</label>
+            <div class="agent-photo-field">
+              <div class="agent-photo-preview" id="agentPhotoPreview">
+                <span id="agentPhotoPlaceholder">No photo</span>
+                <img id="agentPhotoThumb" alt="Selected agent photo preview" hidden>
+              </div>
+              <div>
+                <label class="photo-upload-btn" for="agentPhotoFile">&#128247; Choose Photo</label>
+                <input type="file" id="agentPhotoFile" accept="image/*" onchange="previewAgentPhoto(event)" hidden>
+                <p class="agent-photo-help">JPEG, PNG, or WebP; up to 5 MB.</p>
+                <p class="agent-photo-error" id="agentPhotoError" role="status"></p>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline" onclick="closeModal('agentModal')">Cancel</button>
@@ -458,8 +515,8 @@
     </div>
   </div>
 
-  <script src="js/storage.js?v=2"></script>
-  <script src="js/admin.js?v=2"></script>
+  <script src="js/storage.js?v=3"></script>
+  <script src="js/admin.js?v=4"></script>
   <script>initAdmin();</script>
 </body>
 </html>

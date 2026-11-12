@@ -68,6 +68,48 @@ create table if not exists public.users (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.property_requests (
+  id text primary key,
+  user_id text not null references public.users(id) on delete cascade,
+  requester_name text not null,
+  requester_email text not null,
+  requester_phone text not null default '',
+  admin_message text not null default '',
+  title text not null,
+  type text not null check (type in ('house', 'apartment', 'land', 'commercial')),
+  status text not null check (status in ('sale', 'rent')),
+  price numeric not null default 0,
+  currency text not null default 'RWF',
+  location text not null default '',
+  district text not null default '',
+  bedrooms integer not null default 0,
+  bathrooms integer not null default 0,
+  area numeric not null default 0,
+  description text not null default '',
+  features jsonb not null default '[]'::jsonb,
+  image text not null,
+  request_status text not null default 'pending'
+    check (request_status in ('pending', 'accepted', 'cancelled')),
+  accepted_property_id text references public.properties(id) on delete set null,
+  submitted_at timestamptz not null default now(),
+  reviewed_at timestamptz,
+  accepted_at timestamptz,
+  cancelled_at timestamptz
+);
+
+alter table public.property_requests add column if not exists requester_phone text not null default '';
+alter table public.property_requests add column if not exists admin_message text not null default '';
+alter table public.property_requests add column if not exists accepted_at timestamptz;
+alter table public.property_requests add column if not exists cancelled_at timestamptz;
+
+update public.property_requests
+set accepted_at = reviewed_at
+where request_status = 'accepted' and accepted_at is null and reviewed_at is not null;
+
+update public.property_requests
+set cancelled_at = reviewed_at
+where request_status = 'cancelled' and cancelled_at is null and reviewed_at is not null;
+
 create table if not exists public.admins (
   id text primary key,
   username text not null unique,
@@ -82,4 +124,5 @@ alter table public.inquiries enable row level security;
 alter table public.settings enable row level security;
 alter table public.orders enable row level security;
 alter table public.users enable row level security;
+alter table public.property_requests enable row level security;
 alter table public.admins enable row level security;

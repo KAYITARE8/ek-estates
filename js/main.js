@@ -1,4 +1,4 @@
-function renderHeader(activePage, settings) {
+function renderHeader(activePage) {
   const pages = [
     { href: 'index.html', label: 'Home' },
     { href: 'properties.html', label: 'Properties' },
@@ -7,8 +7,17 @@ function renderHeader(activePage, settings) {
   ];
   const navLinks = pages.map(p => `<a href="${p.href}" class="${activePage === p.href ? 'active' : ''}">${p.label}</a>`).join('');
   const user = typeof getUser === 'function' ? getUser() : null;
-  const authBtn = user
-    ? `<div class="user-pill">&#128100; ${user.name} <button onclick="userLogout();location.reload()" class="user-logout-btn">Sign Out</button></div>`
+  const authBtn = user && user.token
+    ? `<div class="user-account" id="userAccount">
+        <button type="button" class="user-account-toggle" onclick="toggleUserMenu(event)" aria-haspopup="true" aria-expanded="false" id="userAccountToggle">
+          &#128100; ${escapeHtml(user.name)} <span aria-hidden="true">&#9662;</span>
+        </button>
+        <div class="user-account-menu" id="userAccountMenu" role="menu">
+          <a href="property-request.html" role="menuitem">Request</a>
+          <a href="property-notifications.html" role="menuitem">Notifications</a>
+          <button type="button" onclick="signOutUser()" role="menuitem">Logout</button>
+        </div>
+      </div>`
     : `<button class="btn-login-header" onclick="openLoginModal()">&#128274; Login</button>`;
   return `
     <header class="header">
@@ -26,6 +35,32 @@ function renderHeader(activePage, settings) {
       </div>
     </header>`;
 }
+
+function toggleUserMenu(event) {
+  event.stopPropagation();
+  const menu = document.getElementById('userAccountMenu');
+  const toggle = document.getElementById('userAccountToggle');
+  const isOpen = menu.classList.toggle('open');
+  toggle.setAttribute('aria-expanded', String(isOpen));
+}
+
+function closeUserMenu() {
+  const menu = document.getElementById('userAccountMenu');
+  const toggle = document.getElementById('userAccountToggle');
+  if (!menu || !toggle) return;
+  menu.classList.remove('open');
+  toggle.setAttribute('aria-expanded', 'false');
+}
+
+function signOutUser() {
+  userLogout();
+  window.location.href = 'index.html';
+}
+
+document.addEventListener('click', event => {
+  const account = document.getElementById('userAccount');
+  if (account && !account.contains(event.target)) closeUserMenu();
+});
 
 function renderLoginModal() {
   return `
@@ -185,27 +220,28 @@ function toggleNav() {
 function renderPropertyCard(property) {
   const badgeClass = property.status === 'sale' ? 'badge-sale' : 'badge-rent';
   const meta = [];
-  if (property.bedrooms > 0) meta.push(`<span>&#128719; ${property.bedrooms} Beds</span>`);
-  if (property.bathrooms > 0) meta.push(`<span>&#128705; ${property.bathrooms} Baths</span>`);
-  meta.push(`<span>&#9632; ${property.area} m&sup2;</span>`);
+  if (property.bedrooms > 0) meta.push(`<span>&#128719; ${escapeHtml(property.bedrooms)} Beds</span>`);
+  if (property.bathrooms > 0) meta.push(`<span>&#128705; ${escapeHtml(property.bathrooms)} Baths</span>`);
+  meta.push(`<span>&#9632; ${escapeHtml(property.area)} m&sup2;</span>`);
+  const propertyUrl = `property.html?id=${encodeURIComponent(property.id)}`;
   return `
     <div class="property-card">
-      <a href="property.html?id=${property.id}">
+      <a href="${propertyUrl}">
         <div class="property-card-img">
-          <img src="${property.image}" alt="${property.title}" loading="lazy">
-          <span class="property-badge ${badgeClass}">${getStatusLabel(property.status)}</span>
-          <span class="badge-type">${getTypeLabel(property.type)}</span>
+          <img src="${escapeHtml(property.image)}" alt="${escapeHtml(property.title)}" loading="lazy">
+          <span class="property-badge ${badgeClass}">${escapeHtml(getStatusLabel(property.status))}</span>
+          <span class="badge-type">${escapeHtml(getTypeLabel(property.type))}</span>
         </div>
         <div class="property-card-body">
-          <h3>${property.title}</h3>
+          <h3>${escapeHtml(property.title)}</h3>
           <div class="property-price">${formatPrice(property.price, property.currency)}</div>
-          <div class="property-location">&#128205; ${property.location}</div>
+          <div class="property-location">&#128205; ${escapeHtml(property.location)}</div>
           <div class="property-meta">${meta.join('')}</div>
         </div>
       </a>
       <div class="property-card-footer">
-        <a href="property.html?id=${property.id}" class="btn btn-outline btn-sm">View Details</a>
-        <button class="btn btn-primary btn-sm" onclick='addToCart(${JSON.stringify({id: property.id, title: property.title, price: property.price, currency: property.currency, image: property.image, status: property.status, location: property.location})})'>&#128722; Add to Cart</button>
+        <a href="${propertyUrl}" class="btn btn-outline btn-sm">View Details</a>
+        <button class="btn btn-primary btn-sm add-to-cart-btn" data-property-id="${escapeHtml(property.id)}">&#128722; Add to Cart</button>
       </div>
     </div>`;
 }
@@ -218,6 +254,12 @@ function renderPropertiesGrid(properties, containerId) {
     return;
   }
   container.innerHTML = properties.map(renderPropertyCard).join('');
+  container.querySelectorAll('.add-to-cart-btn').forEach(button => {
+    button.addEventListener('click', () => {
+      const property = properties.find(item => String(item.id) === button.dataset.propertyId);
+      if (property) addToCart(property);
+    });
+  });
 }
 
 function getUrlParams() {
@@ -283,9 +325,12 @@ async function handleContactSubmit(e) {
 
 function renderAgentCard(agent) {
   const initials = agent.name.split(' ').map(n => n[0]).join('').substring(0, 2);
+  const avatar = agent.photo
+    ? `<img src="${agent.photo}" alt="${agent.name}" loading="lazy">`
+    : initials;
   return `
     <div class="agent-card">
-      <div class="agent-avatar">${initials}</div>
+      <div class="agent-avatar">${avatar}</div>
       <h3>${agent.name}</h3>
       <div class="agent-role">${agent.role}</div>
       <div class="agent-contact">&#128222; ${agent.phone}<br>&#9993; ${agent.email}</div>
@@ -293,14 +338,14 @@ function renderAgentCard(agent) {
 }
 
 async function initPage(activePage) {
-  const settings = await getSettings();
   const headerEl = document.getElementById('site-header');
   const footerEl = document.getElementById('site-footer');
-  if (headerEl) headerEl.innerHTML = renderHeader(activePage, settings);
-  if (footerEl) footerEl.innerHTML = renderFooter(settings);
+  if (headerEl) headerEl.innerHTML = renderHeader(activePage);
   if (!document.getElementById('loginModal')) {
     document.body.insertAdjacentHTML('beforeend', renderLoginModal());
   }
+  const settings = await getSettings();
+  if (footerEl) footerEl.innerHTML = renderFooter(settings);
   if (typeof updateCartBadge === 'function') updateCartBadge();
   return settings;
 }

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Property Request Notifications | EK Estates</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <main>
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <h1>Property Request Notifications</h1>
+          <p>Track every property you have submitted and read the admin's response.</p>
+        </div>
+
+        <div id="request-history-message" class="alert" role="status" hidden></div>
+        <div id="request-history-signin" class="property-request-auth" hidden>
+          <h2>Sign in to view your requests</h2>
+          <button type="button" class="btn btn-primary" onclick="openLoginModal()">Sign in or Register</button>
+        </div>
+        <div id="request-history-content" class="request-history-wrap" hidden>
+          <table class="request-history-table">
+            <thead>
+              <tr>
+                <th>Date Submitted</th>
+                <th>Property</th>
+                <th>Status</th>
+                <th>Message</th>
+                <th>Accepted</th>
+                <th>Cancelled</th>
+              </tr>
+            </thead>
+            <tbody id="request-history-rows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="site-footer"></div>
+
+  <script src="js/storage.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/property-notifications.js"></script>
+</body>
+</html>

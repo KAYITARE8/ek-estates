@@ -119,9 +119,9 @@
       // Render order summary
       document.getElementById('checkoutItems').innerHTML = cart.map(item => `
         <div class="checkout-item">
-          <img src="${item.image}" alt="${item.title}">
+          <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title)}">
           <div>
-            <div style="font-weight:600; font-size:14px">${item.title}</div>
+            <div style="font-weight:600; font-size:14px">${escapeHtml(item.title)}</div>
             <div style="font-size:12px; color:var(--gray)">Qty: ${item.qty}</div>
           </div>
           <div style="font-weight:600; font-size:14px; white-space:nowrap">${formatPrice(item.price * item.qty, item.currency)}</div>

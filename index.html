@@ -5,15 +5,206 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ek estates</title>
   <link rel="stylesheet" href="css/style.css">
+
+  <style>
+    /* ===== Shared green background for both hero divisions ===== */
+    .hero-wrap {
+      background: linear-gradient(135deg, #0d3f31 0%, #1a5c4a 55%, #2a8a6b 100%);
+      overflow: hidden;
+    }
+
+    /* ===== Division 1: welcome (text left, photo right) ===== */
+    .welcome-hero {
+      padding: 56px 0 40px;
+    }
+
+    .welcome-hero .welcome-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      gap: 56px;
+    }
+
+    .welcome-hero .welcome-copy::before {
+      content: "";
+      display: block;
+      width: 72px;
+      height: 4px;
+      margin-bottom: 24px;
+      border-radius: 4px;
+      background: #d4a843;
+      transform-origin: left center;
+      animation: heroRule 0.8s cubic-bezier(.2, .7, .2, 1) 0.1s both;
+    }
+
+    /* gold headline */
+    .welcome-hero .welcome-title {
+      margin: 0 0 22px;
+      font-size: clamp(2.4rem, 5vw, 4.2rem);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      color: #d4a843;
+      animation: heroUp 0.9s cubic-bezier(.2, .7, .2, 1) 0.2s both;
+    }
+
+    .welcome-hero .welcome-title span {
+      display: block;
+    }
+
+    /* white supporting text */
+    .welcome-hero .welcome-sub {
+      margin: 0 0 14px;
+      max-width: 30em;
+      font-size: clamp(1.1rem, 1.8vw, 1.4rem);
+      font-weight: 600;
+      line-height: 1.4;
+      color: #ffffff;
+      animation: heroUp 0.9s cubic-bezier(.2, .7, .2, 1) 0.4s both;
+    }
+
+    .welcome-hero .welcome-desc {
+      margin: 0;
+      max-width: 32em;
+      font-size: clamp(1rem, 1.5vw, 1.15rem);
+      line-height: 1.7;
+      color: #ffffff;
+      animation: heroUp 0.9s cubic-bezier(.2, .7, .2, 1) 0.55s both;
+    }
+
+    /* photo */
+    .welcome-hero .welcome-photo {
+      margin: 0;
+      overflow: hidden;
+      border-radius: 48px 48px 48px 120px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+      animation: heroPhoto 1.1s cubic-bezier(.2, .7, .2, 1) 0.3s both;
+    }
+
+    .welcome-hero .welcome-photo img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+    }
+
+    /* ===== Division 2: heading + search box together ===== */
+    .search-hero {
+      padding: 0 0 64px;
+    }
+
+    .search-hero .search-hero-title {
+      margin: 0 0 18px;
+      font-size: clamp(1.7rem, 3.2vw, 2.6rem);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.01em;
+      text-align: left;
+      color: #ffffff;
+      animation: heroUp 0.9s cubic-bezier(.2, .7, .2, 1) 0.7s both;
+    }
+
+    .search-hero .search-box {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 16px;
+      margin: 0;
+      padding: 24px;
+      max-width: none;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
+      animation: heroUp 0.9s cubic-bezier(.2, .7, .2, 1) 0.85s both;
+    }
+
+    .search-hero .search-box > div {
+      flex: 1 1 160px;
+    }
+
+    .search-hero .search-box label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #4b5b55;
+    }
+
+    .search-hero .search-box select,
+    .search-hero .search-box input {
+      width: 100%;
+    }
+
+    @keyframes heroRule {
+      from { transform: scaleX(0); }
+      to   { transform: scaleX(1); }
+    }
+    @keyframes heroUp {
+      from { opacity: 0; transform: translateY(22px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes heroPhoto {
+      from { opacity: 0; transform: translateX(40px) scale(0.96); }
+      to   { opacity: 1; transform: translateX(0) scale(1); }
+    }
+
+    /* tablet and phone: stack photo under text */
+    @media (max-width: 860px) {
+      .welcome-hero { padding: 40px 0 32px; }
+      .welcome-hero .welcome-grid {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+      .welcome-hero .welcome-photo {
+        border-radius: 32px 32px 32px 72px;
+      }
+      .search-hero { padding-bottom: 48px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .welcome-hero .welcome-copy::before,
+      .welcome-hero .welcome-title,
+      .welcome-hero .welcome-sub,
+      .welcome-hero .welcome-desc,
+      .welcome-hero .welcome-photo,
+      .search-hero .search-hero-title,
+      .search-hero .search-box {
+        animation: none;
+      }
+    }
+  </style>
 </head>
 <body>
   <div id="site-header"></div>
 
-  <section class="hero">
-    <div class="container">
-      <div class="hero-content">
-        <h2 id="heroTitle">Find Your Dream Property in Rwanda</h2>
-        <p id="heroTagline" hidden></p>
+  <div class="hero-wrap">
+
+    <!-- Division 1: welcome message + photo -->
+    <section class="welcome-hero">
+      <div class="container">
+        <div class="welcome-grid">
+          <div class="welcome-copy">
+            <h1 class="welcome-title">
+              <span>Murakaza neza!</span>
+              <span>Welcome to ek estates</span>
+            </h1>
+            <p class="welcome-sub">We'll help you find a place you'll love across Rwanda.</p>
+            <p class="welcome-desc">Explore homes, land and apartments in one of the safest countries in the world.</p>
+            <p id="heroTagline" hidden></p>
+          </div>
+
+          <figure class="welcome-photo">
+            <img src="images/hero.jpg" alt="Agent showing a client a small house model and contract on a desk">
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- Division 2: heading + search box -->
+    <section class="search-hero">
+      <div class="container">
+        <h2 class="search-hero-title">Find Your Dream Property in Rwanda</h2>
+
         <form class="search-box" onsubmit="handleHeroSearch(event)">
           <div>
             <label>Status</label>
@@ -49,14 +240,9 @@
           <button type="submit" class="btn btn-accent btn-lg">Search</button>
         </form>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="section">
-    <div class="container">
-      <div class="stats" id="statsSection"></div>
-    </div>
-  </section>
+  </div>
 
   <section class="section bg-light">
     <div class="container">
@@ -142,21 +328,14 @@
   <script>
     (async () => {
       const settings = await initPage('index.html');
-      document.getElementById('heroTitle').textContent = 'Find Your Dream Property in Rwanda';
       const heroTagline = document.getElementById('heroTagline');
       heroTagline.textContent = settings.tagline;
       heroTagline.hidden = !settings.tagline.trim();
 
-      const [properties, agents, stats] = await Promise.all([getProperties(), getAgents(), getStats()]);
+      const [properties, agents] = await Promise.all([getProperties(), getAgents()]);
       const featured = properties.filter(p => p.featured);
       renderPropertiesGrid(featured, 'featuredProperties');
 
-      document.getElementById('statsSection').innerHTML = `
-        <div class="stat-item"><div class="stat-number">${properties.length}</div><div class="stat-label">Active Listings</div></div>
-        <div class="stat-item"><div class="stat-number">${agents.length}</div><div class="stat-label">Expert Agents</div></div>
-        <div class="stat-item"><div class="stat-number">${stats.users}</div><div class="stat-label">Registered Users</div></div>
-        <div class="stat-item"><div class="stat-number">${stats.orders}</div><div class="stat-label">Orders Placed</div></div>
-      `;
       document.getElementById('agentsSection').innerHTML = agents.map(renderAgentCard).join('');
     })();
 

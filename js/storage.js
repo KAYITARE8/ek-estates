@@ -16,21 +16,41 @@ function logout() {
   sessionStorage.removeItem('ke_session');
 }
 
+function escapeHtml(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ── Async API helpers ─────────────────────────────────────────
 async function apiFetch(url, options = {}) {
   const headers = { 'Content-Type': 'application/json', ...options.headers };
   const session = getSession();
-  if (session && session.token) headers.Authorization = `Bearer ${session.token}`;
+  const user = getUser();
+  const token = session && session.token ? session.token : user && user.token;
+  if (token) headers.Authorization = `Bearer ${token}`;
   const res = await fetch(API + url, { ...options, headers });
   if (!res.ok) {
-    const message = await res.text();
     if (res.status === 401 && session && session.token) {
       logout();
       if (window.location.pathname.endsWith('/admin.html')) {
         window.location.href = 'admin-login.html';
       }
+    } else if (res.status === 401 && user && user.token) {
+      sessionStorage.removeItem('ke_user');
     }
-    throw new Error(message);
+    const responseText = await res.text();
+    let message = responseText;
+    try {
+      const body = JSON.parse(responseText);
+      message = body.error || body.message || responseText;
+    } catch (error) {
+      message = responseText;
+    }
+    throw new Error(message || `Request failed (${res.status})`);
   }
   return res.json();
 }
@@ -54,6 +74,33 @@ async function updateProperty(id, data) {
 
 async function deleteProperty(id) {
   return apiFetch('/api/properties/' + id, { method: 'DELETE' });
+}
+
+async function submitPropertyRequest(data) {
+  return apiFetch('/api/property-requests', { method: 'POST', body: JSON.stringify(data) });
+}
+
+async function getPropertyRequests() {
+  return apiFetch('/api/property-requests');
+}
+
+async function getPropertyRequestAnalytics() {
+  return apiFetch('/api/property-requests/analytics');
+}
+
+async function getMyPropertyRequests() {
+  return apiFetch('/api/my/property-requests');
+}
+
+async function acceptPropertyRequest(id) {
+  return apiFetch('/api/property-requests/' + encodeURIComponent(id) + '/accept', { method: 'POST' });
+}
+
+async function cancelPropertyRequest(id, reason) {
+  return apiFetch('/api/property-requests/' + encodeURIComponent(id) + '/cancel', {
+    method: 'POST',
+    body: JSON.stringify({ reason })
+  });
 }
 
 // ── Agents ────────────────────────────────────────────────────
@@ -122,11 +169,12 @@ async function userLogin(email, password) {
   try {
     const data = await apiFetch('/api/login', { method: 'POST', body: JSON.stringify({ email, password }) });
     if (data.role === 'admin') {
+      sessionStorage.removeItem('ke_user');
       sessionStorage.setItem('ke_session', JSON.stringify({ username: data.username, name: data.name, token: data.token, loginTime: Date.now() }));
       return { ok: true, role: 'admin' };
     }
     sessionStorage.removeItem('ke_session');
-    sessionStorage.setItem('ke_user', JSON.stringify({ id: data.id, name: data.name, email: data.email }));
+    sessionStorage.setItem('ke_user', JSON.stringify({ id: data.id, name: data.name, email: data.email, token: data.token }));
     return { ok: true, role: 'user' };
   } catch (e) {
     return { ok: false, error: e.message };
@@ -147,6 +195,7 @@ async function login(email, password) {
   try {
     const data = await apiFetch('/api/login', { method: 'POST', body: JSON.stringify({ email, password }) });
     if (data.role === 'admin') {
+      sessionStorage.removeItem('ke_user');
       sessionStorage.setItem('ke_session', JSON.stringify({ username: data.username, name: data.name, token: data.token, loginTime: Date.now() }));
       return true;
     }

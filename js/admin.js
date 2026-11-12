@@ -1,4 +1,6 @@
 let currentFeatures = [];
+let currentAgentPhoto = '';
+let propertyRequestToCancel = null;
 
 function checkAuth() {
   if (!isLoggedIn()) {
@@ -46,7 +48,7 @@ function showSection(sectionId) {
   if (section) section.classList.add('active');
   const navLink = document.querySelector(`[data-section="${sectionId}"]`);
   if (navLink) navLink.classList.add('active');
-  const titles = { dashboard: 'Dashboard', properties: 'Manage Properties', agents: 'Manage Agents', inquiries: 'Inquiries', done: 'Done Inquiries', users: 'Registered Users', analytics: 'Analytics', settings: 'Settings', profile: 'My Profile' };
+  const titles = { dashboard: 'Dashboard', properties: 'Manage Properties', agents: 'Manage Agents', inquiries: 'Inquiries', done: 'Review Queue', users: 'Registered Users', analytics: 'Analytics', settings: 'Settings', profile: 'My Profile' };
   const titleEl = document.getElementById('pageTitle');
   if (titleEl) titleEl.textContent = titles[sectionId] || 'Admin';
   if (sectionId === 'dashboard') renderDashboard();
@@ -76,20 +78,20 @@ async function renderDashboard() {
     ? '<tr><td colspan="5" class="empty-table">No properties yet</td></tr>'
     : properties.slice(0, 5).map(p => `
       <tr>
-        <td><img src="${p.image}" class="table-img" alt=""></td>
-        <td>${p.title}</td>
+        <td><img src="${escapeHtml(p.image)}" class="table-img" alt=""></td>
+        <td>${escapeHtml(p.title)}</td>
         <td>${formatPrice(p.price, p.currency)}</td>
-        <td><span class="status-badge status-${p.status}">${getStatusLabel(p.status)}</span></td>
-        <td>${p.location}</td>
+        <td><span class="status-badge status-${escapeHtml(p.status)}">${escapeHtml(getStatusLabel(p.status))}</span></td>
+        <td>${escapeHtml(p.location)}</td>
       </tr>`).join('');
 
   document.getElementById('recentInquiries').innerHTML = inquiries.slice(0, 5).length === 0
     ? '<tr><td colspan="4" class="empty-table">No inquiries yet</td></tr>'
     : inquiries.slice(0, 5).map(i => `
       <tr>
-        <td>${i.name}</td>
-        <td>${i.propertyTitle || i.property_title || 'General'}</td>
-        <td>${new Date(i.date).toLocaleDateString()}</td>
+        <td>${escapeHtml(i.name)}</td>
+        <td>${escapeHtml(i.propertyTitle || i.property_title || 'General')}</td>
+        <td>${escapeHtml(new Date(i.date).toLocaleDateString())}</td>
         <td><span class="status-badge ${i.read ? 'status-read' : 'status-unread'}">${i.read ? 'Read' : 'New'}</span></td>
       </tr>`).join('');
 }
@@ -100,12 +102,12 @@ async function renderPropertiesTable() {
     ? '<tr><td colspan="7" class="empty-table">No properties. Click "Add Property" to create one.</td></tr>'
     : properties.map(p => `
       <tr>
-        <td><img src="${p.image}" class="table-img" alt=""></td>
-        <td>${p.title} ${p.featured ? '<span class="featured-star" title="Featured">&#9733;</span>' : ''}</td>
-        <td>${getTypeLabel(p.type)}</td>
-        <td><span class="status-badge status-${p.status}">${getStatusLabel(p.status)}</span></td>
+        <td><img src="${escapeHtml(p.image)}" class="table-img" alt=""></td>
+        <td>${escapeHtml(p.title)} ${p.featured ? '<span class="featured-star" title="Featured">&#9733;</span>' : ''}</td>
+        <td>${escapeHtml(getTypeLabel(p.type))}</td>
+        <td><span class="status-badge status-${escapeHtml(p.status)}">${escapeHtml(getStatusLabel(p.status))}</span></td>
         <td>${formatPrice(p.price, p.currency)}</td>
-        <td>${p.location}</td>
+        <td>${escapeHtml(p.location)}</td>
         <td class="actions">
           <button class="btn btn-sm btn-outline" onclick="editProperty('${p.id}')">Edit</button>
           <button class="btn btn-sm btn-danger" onclick="confirmDeleteProperty('${p.id}')">Delete</button>
@@ -133,18 +135,32 @@ async function renderAgentsTable() {
 async function renderInquiriesTable() {
   const all = await getInquiries();
   const inquiries = all.filter(i => !i.is_done);
+  const completed = all.filter(i => i.is_done);
   document.getElementById('inquiriesTable').innerHTML = inquiries.length === 0
     ? '<tr><td colspan="6" class="empty-table">No inquiries received yet.</td></tr>'
     : inquiries.map(i => `
       <tr style="${!i.read ? 'font-weight:600' : ''}">
-        <td>${i.name}</td>
-        <td>${i.email}<br><small>${i.phone}</small></td>
-        <td>${i.propertyTitle || i.property_title || 'General'}</td>
-        <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">${i.message}</td>
-        <td>${new Date(i.date).toLocaleString()}</td>
+        <td>${escapeHtml(i.name)}</td>
+        <td>${escapeHtml(i.email)}<br><small>${escapeHtml(i.phone)}</small></td>
+        <td>${escapeHtml(i.propertyTitle || i.property_title || 'General')}</td>
+        <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">${escapeHtml(i.message)}</td>
+        <td>${escapeHtml(new Date(i.date).toLocaleString())}</td>
         <td class="actions">
           ${!i.read ? `<button class="btn btn-sm btn-outline" onclick="markRead('${i.id}')">Mark Read</button>` : ''}
           <button class="btn btn-sm btn-primary" onclick="markDone('${i.id}')">Done</button>
+        </td>
+      </tr>`).join('');
+  document.getElementById('completedInquiriesTable').innerHTML = completed.length === 0
+    ? '<tr><td colspan="6" class="empty-table">No done inquiries yet.</td></tr>'
+    : completed.map(i => `
+      <tr>
+        <td>${escapeHtml(i.name)}</td>
+        <td>${escapeHtml(i.email)}<br><small>${escapeHtml(i.phone)}</small></td>
+        <td>${escapeHtml(i.propertyTitle || i.property_title || 'General')}</td>
+        <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">${escapeHtml(i.message)}</td>
+        <td>${escapeHtml(new Date(i.date).toLocaleString())}</td>
+        <td class="actions">
+          <button class="btn btn-sm btn-danger" onclick="confirmDeleteInquiry('${i.id}')">Delete</button>
         </td>
       </tr>`).join('');
 
@@ -155,33 +171,116 @@ async function renderInquiriesTable() {
 
 async function markDone(id) {
   await markInquiryDone(id);
-  renderInquiriesTable();
-  renderDashboard();
+  await Promise.all([renderInquiriesTable(), renderDashboard()]);
   showAlert('Inquiry marked as done!', 'success');
 }
 
 async function renderDoneTable() {
-  const inquiries = await getInquiries();
-  const done = inquiries.filter(i => i.is_done);
-  document.getElementById('doneTable').innerHTML = done.length === 0
-    ? '<tr><td colspan="6" class="empty-table">No done inquiries yet.</td></tr>'
-    : done.map(i => `
+  try {
+    renderPropertyRequestsTable(await getPropertyRequests());
+  } catch (error) {
+    console.error('Unable to load property requests:', error);
+    document.getElementById('propertyRequestsTable').innerHTML =
+      `<tr><td colspan="6" class="empty-table">Review Queue could not be loaded: ${escapeHtml(error.message)}</td></tr>`;
+    showAlert('Property requests could not be loaded. Check the database schema and admin session.', 'error');
+  }
+}
+
+function renderPropertyRequestsTable(requests) {
+  const table = document.getElementById('propertyRequestsTable');
+  table.innerHTML = requests.length === 0
+    ? '<tr><td colspan="6" class="empty-table">No property requests are waiting for review.</td></tr>'
+    : requests.map(request => `
       <tr>
-        <td>${i.name}</td>
-        <td>${i.email}<br><small>${i.phone}</small></td>
-        <td>${i.propertyTitle || i.property_title || 'General'}</td>
-        <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">${i.message}</td>
-        <td>${new Date(i.date).toLocaleString()}</td>
+        <td>
+          <div class="request-property-cell">
+            <img src="${escapeHtml(request.image)}" class="table-img" alt="">
+            <div>
+              <strong>${escapeHtml(request.title)}</strong>
+              <small>${escapeHtml(getTypeLabel(request.type))} · ${escapeHtml(getStatusLabel(request.status))} · ${escapeHtml(request.bedrooms)} bd · ${escapeHtml(request.bathrooms)} ba · ${escapeHtml(request.area)} m²</small>
+              <small class="request-description" title="${escapeHtml(request.description)}">${escapeHtml(request.description)}</small>
+              <small>${escapeHtml((request.features || []).join(', '))}</small>
+            </div>
+          </div>
+        </td>
+        <td>${formatPrice(request.price, request.currency)}</td>
+        <td>${escapeHtml(request.location)}, ${escapeHtml(request.district)}</td>
+        <td>${escapeHtml(request.requesterName)}<br><small>${escapeHtml(request.requesterEmail)}</small><small>${escapeHtml(request.requesterPhone)}</small></td>
+        <td>${escapeHtml(new Date(request.submittedAt).toLocaleString())}</td>
         <td class="actions">
-          <button class="btn btn-sm btn-danger" onclick="confirmDeleteInquiry('${i.id}')">Done</button>
+          <button type="button" class="btn btn-sm btn-primary js-accept-property-request" data-request-id="${escapeHtml(request.id)}">Accept</button>
+          <button type="button" class="btn btn-sm btn-danger js-cancel-property-request" data-request-id="${escapeHtml(request.id)}">Cancel</button>
         </td>
       </tr>`).join('');
+
+  table.querySelectorAll('.js-accept-property-request').forEach(button => {
+    button.addEventListener('click', () => reviewAcceptPropertyRequest(button.dataset.requestId));
+  });
+  table.querySelectorAll('.js-cancel-property-request').forEach(button => {
+    button.addEventListener('click', () => reviewCancelPropertyRequest(button.dataset.requestId));
+  });
+}
+
+async function reviewAcceptPropertyRequest(id) {
+  try {
+    await acceptPropertyRequest(id);
+  } catch (error) {
+    console.error('Unable to accept property request:', error);
+    showAlert(error.message || 'The property request could not be accepted.', 'error');
+    return;
+  }
+  showAlert('Property request accepted and published.', 'success');
+  try {
+    await Promise.all([renderDoneTable(), renderPropertiesTable(), renderDashboard()]);
+  } catch (error) {
+    console.error('Unable to refresh admin lists after publishing property:', error);
+    showAlert('Property was published, but the admin lists could not be refreshed.', 'error');
+  }
+}
+
+async function reviewCancelPropertyRequest(id) {
+  propertyRequestToCancel = id;
+  document.getElementById('cancelPropertyRequestReason').value = '';
+  document.getElementById('cancelPropertyRequestError').textContent = '';
+  openModal('cancelPropertyRequestModal');
+  document.getElementById('cancelPropertyRequestReason').focus();
+}
+
+function closeCancelPropertyRequestModal() {
+  closeModal('cancelPropertyRequestModal');
+  propertyRequestToCancel = null;
+}
+
+async function submitCancelPropertyRequest(event) {
+  event.preventDefault();
+  const reasonInput = document.getElementById('cancelPropertyRequestReason');
+  const reason = reasonInput.value.trim();
+  const errorEl = document.getElementById('cancelPropertyRequestError');
+  const submitButton = document.getElementById('confirmCancelPropertyRequest');
+  if (!propertyRequestToCancel) return;
+  if (reason.length < 3) {
+    errorEl.textContent = 'Please provide a reason of at least 3 characters.';
+    reasonInput.focus();
+    return;
+  }
+
+  submitButton.disabled = true;
+  try {
+    await cancelPropertyRequest(propertyRequestToCancel, reason);
+    closeCancelPropertyRequestModal();
+    showAlert('Property request cancelled and the user has been notified.', 'success');
+    await renderDoneTable();
+  } catch (error) {
+    console.error('Unable to cancel property request:', error);
+    errorEl.textContent = error.message || 'The property request could not be cancelled.';
+  } finally {
+    submitButton.disabled = false;
+  }
 }
 
 async function markRead(id) {
   await markInquiryRead(id);
-  renderInquiriesTable();
-  renderDashboard();
+  await Promise.all([renderInquiriesTable(), renderDashboard()]);
 }
 
 function openModal(modalId) { document.getElementById(modalId).classList.add('active'); }
@@ -300,6 +399,78 @@ function renderFeaturesTags() {
   ).join('');
 }
 
+function resizeAgentPhoto(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Could not read the selected photo.'));
+    reader.onabort = () => reject(new Error('Photo reading was cancelled.'));
+    reader.onload = () => {
+      const image = new Image();
+      image.onerror = () => reject(new Error('The selected file is not a valid image.'));
+      image.onload = () => {
+        const maxDimension = 500;
+        const scale = Math.min(maxDimension / image.naturalWidth, maxDimension / image.naturalHeight, 1);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+        canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+        const context = canvas.getContext('2d');
+        if (!context) {
+          reject(new Error('Could not prepare the selected photo.'));
+          return;
+        }
+        try {
+          context.drawImage(image, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', 0.82));
+        } catch (error) {
+          reject(new Error('Could not prepare the selected photo.'));
+        }
+      };
+      image.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function showAgentPhotoPreview(photo) {
+  const image = document.getElementById('agentPhotoThumb');
+  const placeholder = document.getElementById('agentPhotoPlaceholder');
+  if (photo) {
+    image.src = photo;
+    image.hidden = false;
+    placeholder.hidden = true;
+  } else {
+    image.removeAttribute('src');
+    image.hidden = true;
+    placeholder.hidden = false;
+  }
+}
+
+async function previewAgentPhoto(event) {
+  const input = event.target;
+  const file = input.files[0];
+  const errorEl = document.getElementById('agentPhotoError');
+  errorEl.textContent = '';
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    errorEl.textContent = 'Choose an image file.';
+    input.value = '';
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    errorEl.textContent = 'Choose an image smaller than 5 MB.';
+    input.value = '';
+    return;
+  }
+  try {
+    currentAgentPhoto = await resizeAgentPhoto(file);
+    showAgentPhotoPreview(currentAgentPhoto);
+  } catch (error) {
+    console.error('Unable to process agent photo:', error);
+    errorEl.textContent = error.message;
+    input.value = '';
+  }
+}
+
 function openAgentModal(agent) {
   document.getElementById('agentModalTitle').textContent = agent ? 'Edit Agent' : 'Add Agent';
   document.getElementById('agentId').value = agent ? agent.id : '';
@@ -307,6 +478,10 @@ function openAgentModal(agent) {
   document.getElementById('agentRole').value = agent ? agent.role : '';
   document.getElementById('agentPhone').value = agent ? agent.phone : '';
   document.getElementById('agentEmail').value = agent ? agent.email : '';
+  document.getElementById('agentPhotoFile').value = '';
+  document.getElementById('agentPhotoError').textContent = '';
+  currentAgentPhoto = agent ? agent.photo || '' : '';
+  showAgentPhotoPreview(currentAgentPhoto);
   openModal('agentModal');
 }
 
@@ -324,7 +499,7 @@ async function saveAgent(e) {
     role: document.getElementById('agentRole').value,
     phone: document.getElementById('agentPhone').value,
     email: document.getElementById('agentEmail').value,
-    photo: ''
+    photo: currentAgentPhoto
   };
   if (id) { await updateAgent(id, data); } else { await addAgent(data); }
   closeModal('agentModal');
@@ -345,8 +520,7 @@ async function confirmDeleteAgent(id) {
 async function confirmDeleteInquiry(id) {
   if (confirm('Delete this inquiry?')) {
     await deleteInquiry(id);
-    renderInquiriesTable();
-    renderDashboard();
+    await Promise.all([renderInquiriesTable(), renderDashboard()]);
   }
 }
 
@@ -374,13 +548,36 @@ async function confirmDeleteUser(id) {
 }
 
 async function renderAnalytics() {
-  const [properties, inquiries, orders, users] = await Promise.all([getProperties(), getInquiries(), getOrders(), getUsers()]);
+  const [properties, inquiries, users] = await Promise.all([
+    getProperties(),
+    getInquiries(),
+    getUsers()
+  ]);
+  let requestStats = null;
+  try {
+    const data = await getPropertyRequestAnalytics();
+    if (!data || !Number.isFinite(data.total) || !Array.isArray(data.byMonth)) {
+      throw new Error('Invalid property request analytics response');
+    }
+    requestStats = data;
+  } catch (error) {
+    console.error('Unable to load property request analytics:', error);
+    showAlert('Request analytics could not be loaded. Other analytics are still available.', 'error');
+  }
 
   document.getElementById('analyticsCards').innerHTML = `
-    <div class="dash-card primary"><div class="label">Total Properties</div><div class="value">${properties.length}</div></div>
-    <div class="dash-card"><div class="label">Total Users</div><div class="value">${users.length}</div></div>
-    <div class="dash-card accent"><div class="label">Total Orders</div><div class="value">${orders.length}</div></div>
-    <div class="dash-card"><div class="label">Total Inquiries</div><div class="value">${inquiries.length}</div></div>`;
+    <a href="#properties" class="dash-card primary analytics-card-link" aria-label="View properties" onclick="showSection('properties'); return false;">
+      <div class="label">Total Properties</div><div class="value">${properties.length}</div>
+    </a>
+    <a href="#users" class="dash-card analytics-card-link" aria-label="View registered users" onclick="showSection('users'); return false;">
+      <div class="label">Total Users</div><div class="value">${users.length}</div>
+    </a>
+    <a href="#done" class="dash-card accent analytics-card-link" aria-label="View property requests" onclick="showSection('done'); return false;">
+      <div class="label">Total Requests</div><div class="value">${requestStats ? requestStats.total : '-'}</div>
+    </a>
+    <a href="#inquiries" class="dash-card analytics-card-link" aria-label="View inquiries" onclick="showSection('inquiries'); return false;">
+      <div class="label">Total Inquiries</div><div class="value">${inquiries.length}</div>
+    </a>`;
 
   // Properties by type
   const byType = {};
@@ -400,10 +597,20 @@ async function renderAnalytics() {
   });
   renderBarChart('chartInquiries', byMonth, Math.max(...Object.values(byMonth), 1));
 
-  // Orders by status
-  const byOrderStatus = {};
-  orders.forEach(o => { byOrderStatus[o.status] = (byOrderStatus[o.status] || 0) + 1; });
-  renderBarChart('chartOrders', byOrderStatus, orders.length || 1);
+  // Property requests by month
+  if (requestStats) {
+    const requestsByMonth = {};
+    requestStats.byMonth.forEach(({ month, count }) => {
+      const [year, monthNumber] = month.split('-').map(Number);
+      const label = new Date(Date.UTC(year, monthNumber - 1, 1))
+        .toLocaleString('default', { month: 'short', year: '2-digit' });
+      requestsByMonth[label] = count;
+    });
+    renderBarChart('chartRequests', requestsByMonth, Math.max(...Object.values(requestsByMonth), 1));
+  } else {
+    document.getElementById('chartRequests').innerHTML =
+      '<div style="color:#94a3b8;padding:20px;text-align:center">Request data could not be loaded</div>';
+  }
 }
 
 function renderBarChart(containerId, data, total) {
@@ -530,7 +737,7 @@ async function saveAdminCredentials(e) {
 function showAlert(message, type) {
   const alertEl = document.getElementById('adminAlert');
   if (alertEl) {
-    alertEl.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+    alertEl.innerHTML = `<div class="alert alert-${escapeHtml(type)}">${escapeHtml(message)}</div>`;
     setTimeout(() => { alertEl.innerHTML = ''; }, 4000);
   }
 }

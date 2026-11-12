@@ -30,50 +30,50 @@
       const property = await getProperty(params.id);
       if (!property) return;
 
-      document.title = property.title + ' - ek estates';
+      document.title = String(property.title) + ' - ek estates';
       const meta = [];
       if (property.bedrooms > 0) meta.push({ value: property.bedrooms, label: 'Bedrooms' });
       if (property.bathrooms > 0) meta.push({ value: property.bathrooms, label: 'Bathrooms' });
       meta.push({ value: property.area + ' m²', label: 'Area' });
       meta.push({ value: property.district, label: 'District' });
 
-      const featuresHtml = property.features.map(f => `<span class="feature-tag">${f}</span>`).join('');
+      const featuresHtml = (property.features || []).map(f => `<span class="feature-tag">${escapeHtml(f)}</span>`).join('');
       const agents = await getAgents();
 
       document.getElementById('propertyContent').innerHTML = `
         <div class="property-detail">
           <div>
-            <div class="property-gallery"><img src="${property.image}" alt="${property.title}"></div>
+            <div class="property-gallery"><img src="${escapeHtml(property.image)}" alt="${escapeHtml(property.title)}"></div>
             <div style="margin-top:32px">
               <h2 style="font-size:22px; margin-bottom:12px">Description</h2>
-              <p style="color:var(--gray); line-height:1.8">${property.description}</p>
+              <p style="color:var(--gray); line-height:1.8">${escapeHtml(property.description)}</p>
               <h3 style="font-size:18px; margin:24px 0 8px">Features</h3>
               <div class="features-list">${featuresHtml}</div>
             </div>
           </div>
           <div class="property-info">
-            <span class="property-badge ${property.status === 'sale' ? 'badge-sale' : 'badge-rent'}" style="display:inline-block; margin-bottom:12px; position:static">${getStatusLabel(property.status)}</span>
-            <h1>${property.title}</h1>
+            <span class="property-badge ${property.status === 'sale' ? 'badge-sale' : 'badge-rent'}" style="display:inline-block; margin-bottom:12px; position:static">${escapeHtml(getStatusLabel(property.status))}</span>
+            <h1>${escapeHtml(property.title)}</h1>
             <div class="price">${formatPriceFull(property.price)}${property.status === 'rent' ? '/mo' : ''}</div>
-            <div class="location">&#128205; ${property.location}, ${property.district}</div>
+            <div class="location">&#128205; ${escapeHtml(property.location)}, ${escapeHtml(property.district)}</div>
             <div class="detail-meta">
-              ${meta.map(m => `<div class="detail-meta-item"><div class="value">${m.value}</div><div class="label">${m.label}</div></div>`).join('')}
+              ${meta.map(m => `<div class="detail-meta-item"><div class="value">${escapeHtml(m.value)}</div><div class="label">${escapeHtml(m.label)}</div></div>`).join('')}
             </div>
-            <p style="color:var(--gray); font-size:14px"><strong>Type:</strong> ${getTypeLabel(property.type)}<br><strong>Listed:</strong> ${property.createdAt}</p>
+            <p style="color:var(--gray); font-size:14px"><strong>Type:</strong> ${escapeHtml(getTypeLabel(property.type))}<br><strong>Listed:</strong> ${escapeHtml(property.createdAt)}</p>
             <div class="inquiry-form">
               <h3>Inquire About This Property</h3>
               <div id="formAlert"></div>
-              <form onsubmit="handleInquirySubmit(event, '${property.id}')">
+              <form onsubmit="handleInquirySubmit(event, this.dataset.propertyId)" data-property-id="${escapeHtml(property.id)}">
                 <div class="form-group"><label>Your Name *</label><input type="text" name="name" required></div>
                 <div class="form-group"><label>Email *</label><input type="email" name="email" required></div>
                 <div class="form-group"><label>Phone *</label><input type="tel" name="phone" required placeholder="+250..."></div>
-                <div class="form-group"><label>Message</label><textarea name="message">I am interested in "${property.title}". Please contact me with more details.</textarea></div>
+                <div class="form-group"><label>Message</label><textarea name="message">I am interested in "${escapeHtml(property.title)}". Please contact me with more details.</textarea></div>
                 <button type="submit" class="btn btn-primary" style="width:100%">Send Inquiry</button>
               </form>
             </div>
             <div style="margin-top:24px; padding:20px; background:var(--light-gray); border-radius:var(--radius)">
               <h3 style="font-size:16px; margin-bottom:12px">Contact Agent</h3>
-              ${agents.slice(0, 1).map(a => `<p style="font-size:14px; color:var(--gray)"><strong>${a.name}</strong> - ${a.role}<br>&#128222; ${a.phone}<br>&#9993; ${a.email}</p>`).join('')}
+              ${agents.slice(0, 1).map(a => `<p style="font-size:14px; color:var(--gray)"><strong>${escapeHtml(a.name)}</strong> - ${escapeHtml(a.role)}<br>&#128222; ${escapeHtml(a.phone)}<br>&#9993; ${escapeHtml(a.email)}</p>`).join('')}
             </div>
           </div>
         </div>`;

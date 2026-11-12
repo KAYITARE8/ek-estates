@@ -59,11 +59,11 @@
         </div>
         ${cart.map(item => `
           <div class="cart-item">
-            <img src="${item.image}" alt="${item.title}">
+            <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title)}">
             <div class="cart-item-info">
-              <h3>${item.title}</h3>
-              <p>&#128205; ${item.location}</p>
-              <span class="property-badge ${item.status === 'sale' ? 'badge-sale' : 'badge-rent'}" style="position:static; display:inline-block; margin-top:4px">${getStatusLabel(item.status)}</span>
+              <h3>${escapeHtml(item.title)}</h3>
+              <p>&#128205; ${escapeHtml(item.location)}</p>
+              <span class="property-badge ${item.status === 'sale' ? 'badge-sale' : 'badge-rent'}" style="position:static; display:inline-block; margin-top:4px">${escapeHtml(getStatusLabel(item.status))}</span>
             </div>
             <div class="cart-item-qty">
               <label>Qty</label>
