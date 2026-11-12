@@ -4,7 +4,7 @@ A full-stack real estate e-commerce web application for browsing, listing, and m
 
 ## Live Demo
 
-🔗 [https://kigali-estates.onrender.com](https://ek-estates.onrender.com)
+🔗 [https://ek-estates.onrender.com](https://ek-estates.onrender.com)
 
 ## GitHub Repository
 
