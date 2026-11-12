@@ -4,41 +4,15 @@ A full-stack real estate e-commerce web application for browsing, listing, and m
 
 ## Live Demo
 
-🔗 [https://kigali-estates.onrender.com](https://kigali-estates.onrender.com)
+🔗 [https://kigali-estates.onrender.com](https://ek-estates.onrender.com)
 
 ## GitHub Repository
 
-🔗 [https://github.com/KAYITARE8/-kigali-estates](https://github.com/KAYITARE8/-kigali-estates)
+🔗 [https://github.com/KAYITARE8/ek-estates](https://github.com/KAYITARE8/ek-estates)
 
 ---
 
-## Screenshots
 
-### Homepage
-![Homepage](screeshshots/indexpage.png)
-
-### Properties
-![Properties](screeshshots/properties.png)
-
-### About
-![About](screeshshots/about.png)
-
-### Contact
-![Contact](screeshshots/contact.png)
-
-### Admin Dashboard
-![Admin Dashboard](screeshshots/admin%20dash.png)
-
-### Inquiries
-![Inquiries](screeshshots/inquiries.png)
-
-### Users
-![Users](screeshshots/users.png)
-
-### Analytics
-![Analytics](screeshshots/analytics.png)
-
----
 
 ## Features
 
