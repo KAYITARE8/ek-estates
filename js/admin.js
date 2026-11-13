@@ -64,7 +64,7 @@ function showSection(sectionId) {
 
 async function renderDashboard() {
   const [properties, agents, inquiries] = await Promise.all([getProperties(), getAgents(), getInquiries()]);
-  const unread = inquiries.filter(i => !i.read).length;
+  const unread = inquiries.filter(i => !i.read && !i.is_done).length;
 
   document.getElementById('dashProperties').textContent = properties.length;
   document.getElementById('dashAgents').textContent = agents.length;
@@ -92,7 +92,7 @@ async function renderDashboard() {
         <td>${escapeHtml(i.name)}</td>
         <td>${escapeHtml(i.propertyTitle || i.property_title || 'General')}</td>
         <td>${escapeHtml(new Date(i.date).toLocaleDateString())}</td>
-        <td><span class="status-badge ${i.read ? 'status-read' : 'status-unread'}">${i.read ? 'Read' : 'New'}</span></td>
+        <td><span class="status-badge ${i.read || i.is_done ? 'status-read' : 'status-unread'}">${i.read || i.is_done ? 'Read' : 'New'}</span></td>
       </tr>`).join('');
 }
 

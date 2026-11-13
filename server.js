@@ -363,11 +363,15 @@ app.delete('/api/agents/:id', requireAdmin, asyncRoute(async (req, res) => {
 
 app.get('/api/inquiries', requireAdmin, asyncRoute(async (req, res) => {
   const rows = await getAll('inquiries', 'date');
-  res.json(rows.map(row => ({
-    ...row,
-    propertyTitle: row.property_title || 'General Inquiry',
-    read: row.is_read || false
-  })));
+  res.json(rows.map(row => {
+    const isRead = row.is_read || row.is_done;
+    return {
+      ...row,
+      is_read: isRead,
+      propertyTitle: row.property_title || 'General Inquiry',
+      read: isRead
+    };
+  }));
 }));
 
 app.post('/api/inquiries', asyncRoute(async (req, res) => {
@@ -384,13 +388,13 @@ app.post('/api/inquiries', asyncRoute(async (req, res) => {
 }));
 
 app.put('/api/inquiries/:id/read', requireAdmin, asyncRoute(async (req, res) => {
-  const row = await update('inquiries', req.params.id, { is_read: true });
+  const row = await update('inquiries', req.params.id, { is_read: true, is_done: true });
   if (!row) return res.status(404).json({ error: 'Not found' });
   res.json({ success: true });
 }));
 
 app.put('/api/inquiries/:id/done', requireAdmin, asyncRoute(async (req, res) => {
-  const row = await update('inquiries', req.params.id, { is_done: true });
+  const row = await update('inquiries', req.params.id, { is_read: true, is_done: true });
   if (!row) return res.status(404).json({ error: 'Not found' });
   res.json({ success: true });
 }));
